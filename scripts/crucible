@@ -1,0 +1,40 @@
+#!/bin/sh -x
+#
+#
+
+CRUCIBLE_ENV="${CRUCIBLE_ENV:-development}"
+
+crucible_start() {
+  # if this is the staging env, then unseal the vault
+  if [ "${CRUCIBLE_ENV}" == "staging" ]; then
+    ./scripts/vault_unseal.js
+  fi
+
+  # compile the solidity code
+  truffle compile --network ${CRUCIBLE_ENV}
+
+  # if this is the dev env, then startup a mock blockchain
+  if [ "${CRUCIBLE_ENV}" == "development" ]; then
+    ./scripts/devchain
+  fi
+
+  # migrate contracts to the appropriate network
+  truffle migrate --network ${CRUCIBLE_ENV}
+
+  # start up the server in the correct environment
+  npm run ${CRUCIBLE_ENV}
+}
+
+crucible_stop() {
+  pkill -f npm
+  pkill -f ganache-cli
+}
+
+case "$1" in
+  start)   crucible_start ;;
+  stop)    crucible_stop ;;
+  restart) crucible_stop; crucible_start ;;
+  *) echo "usage: $0 start|stop|restart" >&2
+    exit 1
+    ;;
+esac

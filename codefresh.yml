@@ -1,0 +1,89 @@
+version: '1.0'
+steps:
+  BuildingDockerImage:
+    title: Building Docker Image
+    type: build
+    image_name: godsflaw/crucible
+    working_directory: ./
+    dockerfile: Dockerfile
+    tag: '${{CF_BRANCH_TAG_NORMALIZED}}'
+
+  RunningUnitTests:
+    title: Running Unit Tests
+    image: '${{BuildingDockerImage}}'
+    working_directory: IMAGE_WORK_DIR
+    entry_point:
+      - /bin/sh
+      - /codefresh/volume/cf-generated/unit_test_script
+    create_file:
+      path: /codefresh/volume/cf-generated
+      name: unit_test_script
+      content: npm test
+    on_success:
+      metadata:
+        set:
+          - '${{BuildingDockerImage.imageId}}':
+            - CF_QUALITY: true
+    on_fail:
+      metadata:
+        set:
+          - '${{BuildingDockerImage.imageId}}':
+            - CF_QUALITY: false
+
+  PushingToDockerRegistry:
+    title: Pushing to Docker Registry
+    type: push
+    candidate: '${{BuildingDockerImage}}'
+    tag: '${{CF_BRANCH_TAG_NORMALIZED}}'
+    registry: cfcr
+
+  RunningIntegrationTests:
+    type: composition
+    title: Running Integration Tests
+    when:
+      branch:
+        only:
+          - dev
+    composition:
+      version: '2'
+      services:
+        vault:
+          image: r.cfcr.io/godsflaw/vault:sealed
+          privileged: true
+    composition_candidates:
+      test_service:
+        image: '${{BuildingDockerImage}}'
+        env_file: ./env-staging
+        command: sh -c 'npm test'
+    on_success:
+      metadata:
+        set:
+          - '${{BuildingDockerImage.imageId}}':
+            - CF_QUALITY: true
+    on_fail:
+      metadata:
+        set:
+          - '${{BuildingDockerImage.imageId}}':
+            - CF_QUALITY: false
+
+  LaunchingStaging:
+    type: launch-composition
+    when:
+      branch:
+        only:
+          - dev
+    composition:
+      version: '2'
+      services:
+        crucible:
+          depends_on:
+            - vault
+          image: '${{BuildingDockerImage}}'
+          env_file: ./env-staging
+          ports:
+            - 3000
+            - 8545
+        vault:
+          image: r.cfcr.io/godsflaw/vault:sealed
+          privileged: true
+    environment_name: 'staging'
