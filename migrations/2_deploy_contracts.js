@@ -1,5 +1,5 @@
-var Crucible = artifacts.require('Crucible');
+var Foundry = artifacts.require('Foundry');
 
 module.exports = function(deployer) {
-  deployer.deploy(Crucible, 'test');
+  deployer.deploy(Foundry);
 };
