@@ -7,6 +7,8 @@ function Address(options) {
 
   options = options || {};
 
+  this.empty = '0x0000000000000000000000000000000000000000';
+
   this.one = '0x5dee77e75a0f9e5272a02d67ce0bf9f3608355fe';
   this.two = '0xa33da2e00bf12026a0aa1bdc6670d8667a95a8be';
   this.three = '0xc22be120845b6565fbb3768c7df74bb47bda88bc';

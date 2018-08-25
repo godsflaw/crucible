@@ -18,7 +18,7 @@ if [ "${CRUCIBLE_ENV}" == "development" ]; then
 fi
 
 # migrate contracts to the appropriate network
-truffle migrate --network ${CRUCIBLE_ENV}
+truffle migrate --network ${CRUCIBLE_ENV} >/dev/null
 
 # run tests
 if [ "${CRUCIBLE_ENV}" == "development" ]; then

@@ -4,22 +4,29 @@ contract Crucible {
   address public owner;
   string public name;
   uint public startDate;
-  uint public endDate;
   uint public closeDate;
+  uint public endDate;
+  // uint public minimumEntry;
 //  ufixed16x8 public fee;
 
-  constructor(address _owner, string _name, uint _startDate, uint _endDate, uint _closeDate) public {
-    // TODO(godsflaw): think through this
+  constructor(address _owner, string _name, uint _startDate, uint _closeDate, uint _endDate) public {
+    name = _name;
+
     if (_owner == address(0x0)) {
       owner = msg.sender;
     } else {
       owner = _owner;
     }
 
-    name = _name;
+    require(
+      _startDate < _closeDate && _closeDate < _endDate,
+      "startDate must be < closeDate and closeDate must be < endDate"
+    );
+
     startDate = _startDate;
-    endDate = _endDate;
     closeDate = _closeDate;
+    endDate = _endDate;
+
 //    fee = _fee;
   }
 

@@ -14,15 +14,15 @@ contract('Foundry - getCount', async (accounts) => {
   let address;
   let foundry;
   let startDate;
-  let endDate;
   let closeDate;
+  let endDate;
 
   beforeEach(async () => {
     address = new Address();
     foundry = await Foundry.new({ from: address.owner });
     startDate = Math.floor(Date.now() / 1000);
-    endDate = Math.floor(addDays(Date.now(), 8) / 1000);
     closeDate = Math.floor(addDays(Date.now(), 1) / 1000);
+    endDate = Math.floor(addDays(Date.now(), 8) / 1000);
   });
 
   afterEach(async () => {
@@ -37,11 +37,11 @@ contract('Foundry - getCount', async (accounts) => {
 
   it('new Crucible count is correct', async () => {
     await foundry.newCrucible(
-      address.oracle, 'test01', startDate, endDate, closeDate
+      address.oracle, 'test01', startDate, closeDate, endDate
     );
 
     await foundry.newCrucible(
-      address.oracle, 'test02', startDate, endDate, closeDate
+      address.oracle, 'test02', startDate, closeDate, endDate
     );
 
     var result = await foundry.getCount.call();
@@ -49,7 +49,7 @@ contract('Foundry - getCount', async (accounts) => {
     assert.equal(crucibleCount, 2, 'got correct crucibleCount');
 
     await foundry.newCrucible(
-      address.oracle, 'test03', startDate, endDate, closeDate
+      address.oracle, 'test03', startDate, closeDate, endDate
     );
 
     result = await foundry.getCount.call();

@@ -13,16 +13,23 @@ contract('Crucible - base', async (accounts) => {
   let address;
   let crucible;
   let startDate;
-  let endDate;
   let closeDate;
+  let endDate;
 
   beforeEach(async () => {
     address = new Address();
+
     startDate = Math.floor(Date.now() / 1000);
-    endDate = Math.floor(addDays(Date.now(), 8) / 1000);
     closeDate = Math.floor(addDays(Date.now(), 1) / 1000);
+    endDate = Math.floor(addDays(Date.now(), 8) / 1000);
+
     crucible = await Crucible.new(
-      address.oracle, 'test', startDate, endDate, closeDate, { from: address.oracle }
+      address.oracle,
+      'test',
+      startDate,
+      closeDate,
+      endDate,
+      { from: address.oracle }
     );
   });
 
@@ -33,6 +40,21 @@ contract('Crucible - base', async (accounts) => {
   it('should verify the owner/oracle', async () => {
     var oracle = await crucible.owner.call();
     assert.equal(oracle, address.oracle, 'got oracle: ' + address.oracle);
+  });
+
+  it('verify the owner/oracle is set to msg.sender if 0x0', async () => {
+    var crucible = await Crucible.new(
+      address.empty,
+      'empty',
+      startDate,
+      closeDate,
+      endDate,
+      { from: address.oracle }
+    );
+    var oracle = await crucible.owner.call();
+    assert.equal(
+      oracle, address.oracle, 'empty address became oracle: ' + address.oracle
+    );
   });
 
   it('verify the name is set', async () => {
@@ -53,5 +75,62 @@ contract('Crucible - base', async (accounts) => {
   it('verify the closeDate is set', async () => {
     var closeDate = await crucible.closeDate.call();
     assert.equal(closeDate.toNumber(), closeDate, 'closeDate is as expected');
+  });
+
+  it('startDate must be less than closeDate', async () => {
+    try {
+      var crucible = await Crucible.new(
+        address.oracle,
+        'startDate test',
+        closeDate,
+        startDate,
+        endDate,
+        { from: address.oracle }
+      );
+    } catch (err) {
+      assert.equal(
+        err.message,
+        'VM Exception while processing transaction: revert',
+        'threw error'
+      );
+    }
+  });
+
+  it('closeDate must be less than endDate', async () => {
+    try {
+      var crucible = await Crucible.new(
+        address.oracle,
+        'startDate test',
+        startDate,
+        endDate,
+        closeDate,
+        { from: address.oracle }
+      );
+    } catch (err) {
+      assert.equal(
+        err.message,
+        'VM Exception while processing transaction: revert',
+        'threw error'
+      );
+    }
+  });
+
+  it('startDate must be less than endDate', async () => {
+    try {
+      var crucible = await Crucible.new(
+        address.oracle,
+        'startDate test',
+        endDate,
+        closeDate,
+        startDate,
+        { from: address.oracle }
+      );
+    } catch (err) {
+      assert.equal(
+        err.message,
+        'VM Exception while processing transaction: revert',
+        'threw error'
+      );
+    }
   });
 });

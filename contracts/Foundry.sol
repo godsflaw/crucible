@@ -25,11 +25,11 @@ contract Foundry {
   }
 
   // deploy a new crucible
-  function newCrucible(address _owner, string _name, uint _startDate, uint _endDate, uint _closeDate)
+  function newCrucible(address _owner, string _name, uint _startDate, uint _closeDate, uint _endDate)
     public
     returns(address)
   {
-    Crucible crucible = new Crucible(_owner, _name, _startDate, _endDate, _closeDate);
+    Crucible crucible = new Crucible(_owner, _name, _startDate, _closeDate, _endDate);
     crucibles.push(crucible);
     emit CrucibleCreated(crucible);
     return crucible;

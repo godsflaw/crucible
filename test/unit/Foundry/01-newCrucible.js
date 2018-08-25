@@ -14,15 +14,15 @@ contract('Foundry - newCrucible', async (accounts) => {
   let address;
   let foundry;
   let startDate;
-  let endDate;
   let closeDate;
+  let endDate;
 
   beforeEach(async () => {
     address = new Address();
     foundry = await Foundry.new({ from: address.owner });
     startDate = Math.floor(Date.now() / 1000);
-    endDate = Math.floor(addDays(Date.now(), 8) / 1000);
     closeDate = Math.floor(addDays(Date.now(), 1) / 1000);
+    endDate = Math.floor(addDays(Date.now(), 8) / 1000);
   });
 
   afterEach(async () => {
@@ -33,7 +33,7 @@ contract('Foundry - newCrucible', async (accounts) => {
     var crucible;
 
     var tx = await foundry.newCrucible(
-      address.oracle, 'deadbeef', startDate, endDate, closeDate
+      address.oracle, 'deadbeef', startDate, closeDate, endDate
     );
 
     truffleAssert.eventEmitted(tx, 'CrucibleCreated', async (ev) => {
@@ -41,7 +41,9 @@ contract('Foundry - newCrucible', async (accounts) => {
     });
 
     var owner = await crucible.owner.call();
-    assert.equal(owner, address.oracle, 'got crucible owner: ' + address.oracle);
+    assert.equal(
+      owner, address.oracle, 'got crucible owner: ' + address.oracle
+    );
 
     var name = await crucible.name.call();
     assert.equal(name.toString(), 'deadbeef', 'got crucible name');
@@ -57,7 +59,9 @@ contract('Foundry - newCrucible', async (accounts) => {
     crucible = Crucible.at(crucibleAddr);
 
     owner = await crucible.owner.call();
-    assert.equal(owner, address.oracle, 'got crucible owner: ' + address.oracle);
+    assert.equal(
+      owner, address.oracle, 'got crucible owner: ' + address.oracle
+    );
 
     name = await crucible.name.call();
     assert.equal(name.toString(), 'deadbeef', 'got crucible name');
