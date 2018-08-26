@@ -29,6 +29,7 @@ contract('Crucible - base', async (accounts) => {
       startDate,
       closeDate,
       endDate,
+      250000000000000000,
       { from: address.oracle }
     );
   });
@@ -49,6 +50,7 @@ contract('Crucible - base', async (accounts) => {
       startDate,
       closeDate,
       endDate,
+      250000000000000000,
       { from: address.oracle }
     );
     var oracle = await crucible.owner.call();
@@ -77,6 +79,15 @@ contract('Crucible - base', async (accounts) => {
     assert.equal(closeDate.toNumber(), closeDate, 'closeDate is as expected');
   });
 
+  it('verify the minimumAmount is set', async () => {
+    var minimumAmount = await crucible.minimumAmount.call();
+    assert.equal(
+      minimumAmount.toNumber(),
+      250000000000000000,
+      'minimumAmount is as expected'
+    );
+  });
+
   it('startDate must be less than closeDate', async () => {
     try {
       var crucible = await Crucible.new(
@@ -85,6 +96,7 @@ contract('Crucible - base', async (accounts) => {
         closeDate,
         startDate,
         endDate,
+        250000000000000000,
         { from: address.oracle }
       );
     } catch (err) {
@@ -104,6 +116,7 @@ contract('Crucible - base', async (accounts) => {
         startDate,
         endDate,
         closeDate,
+        250000000000000000,
         { from: address.oracle }
       );
     } catch (err) {
@@ -123,6 +136,27 @@ contract('Crucible - base', async (accounts) => {
         endDate,
         closeDate,
         startDate,
+        250000000000000000,
+        { from: address.oracle }
+      );
+    } catch (err) {
+      assert.equal(
+        err.message,
+        'VM Exception while processing transaction: revert',
+        'threw error'
+      );
+    }
+  });
+
+  it('minimumAmount must be greater than 0', async () => {
+    try {
+      var crucible = await Crucible.new(
+        address.oracle,
+        'startDate test',
+        endDate,
+        closeDate,
+        startDate,
+        0,
         { from: address.oracle }
       );
     } catch (err) {

@@ -37,11 +37,21 @@ contract('Foundry - getCount', async (accounts) => {
 
   it('new Crucible count is correct', async () => {
     await foundry.newCrucible(
-      address.oracle, 'test01', startDate, closeDate, endDate
+      address.oracle,
+      'test01',
+      startDate,
+      closeDate,
+      endDate,
+      250000000000000000
     );
 
     await foundry.newCrucible(
-      address.oracle, 'test02', startDate, closeDate, endDate
+      address.oracle,
+      'test02',
+      startDate,
+      closeDate,
+      endDate,
+      250000000000000000
     );
 
     var result = await foundry.getCount.call();
@@ -49,7 +59,12 @@ contract('Foundry - getCount', async (accounts) => {
     assert.equal(crucibleCount, 2, 'got correct crucibleCount');
 
     await foundry.newCrucible(
-      address.oracle, 'test03', startDate, closeDate, endDate
+      address.oracle,
+      'test03',
+      startDate,
+      closeDate,
+      endDate,
+      250000000000000000
     );
 
     result = await foundry.getCount.call();

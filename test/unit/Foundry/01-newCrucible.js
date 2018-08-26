@@ -33,7 +33,12 @@ contract('Foundry - newCrucible', async (accounts) => {
     var crucible;
 
     var tx = await foundry.newCrucible(
-      address.oracle, 'deadbeef', startDate, closeDate, endDate
+      address.oracle,
+      'deadbeef',
+      startDate,
+      closeDate,
+      endDate,
+      250000000000000000
     );
 
     truffleAssert.eventEmitted(tx, 'CrucibleCreated', async (ev) => {
