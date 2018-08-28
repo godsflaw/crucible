@@ -1,16 +1,12 @@
+const CrucibleUtils = require('../../fixtures/crucible_utils');
 const Address = require('../../fixtures/address');
 const truffleAssert = require('truffle-assertions');
 
 const Foundry = artifacts.require("./Foundry.sol");
 const Crucible = artifacts.require("./Crucible.sol");
 
-function addDays(date, days) {
-  var result = new Date(date);
-  result.setDate(result.getDate() + days);
-  return result;
-}
-
 contract('Foundry - getCount', async (accounts) => {
+  let cu;
   let address;
   let foundry;
   let startDate;
@@ -18,11 +14,14 @@ contract('Foundry - getCount', async (accounts) => {
   let endDate;
 
   beforeEach(async () => {
+    cu = new CrucibleUtils();
     address = new Address();
+
     foundry = await Foundry.new({ from: address.owner });
+
     startDate = Math.floor(Date.now() / 1000);
-    closeDate = Math.floor(addDays(Date.now(), 1) / 1000);
-    endDate = Math.floor(addDays(Date.now(), 8) / 1000);
+    closeDate = Math.floor(cu.addDays(Date.now(), 1) / 1000);
+    endDate = Math.floor(cu.addDays(Date.now(), 8) / 1000);
   });
 
   afterEach(async () => {
