@@ -20,4 +20,5 @@ contract('Foundry - base', async (accounts) => {
     var owner = await foundry.owner.call();
     assert.equal(owner, address.owner, 'got owner: ' + address.owner);
   });
+
 });

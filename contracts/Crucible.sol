@@ -1,18 +1,20 @@
 pragma solidity ^0.4.24;
 
-contract Crucible {
-  address public owner;
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+
+contract Crucible is Ownable {
   string public name;
   uint public startDate;
   uint public closeDate;
   uint public endDate;
   uint256 public minimumAmount;
 //  ufixed16x8 public fee;
-  Participant[] public participants;
+  address[] public participants;
+  mapping (address => Commitment) public commitments;
 
-  struct Participant {
-    address beneficiary;
+  struct Commitment {
     uint256 amount;
+    // TODO(godsflaw): change to ENUM with (waiting, false, true)
     bool metGoal;
   }
 
@@ -39,19 +41,20 @@ contract Crucible {
     minimumAmount = _minimumAmount;
   }
 
-  function kill() external {
-    require(msg.sender == owner, "only the owner can kill this contract");
+  function kill() external onlyOwner {
     // TODO(godsflaw): this should distribute funds back to participants
     selfdestruct(owner);
   }
 
   // TODO(godsflaw): test
-  function addParticipant(address _beneficiary, uint256 _amount) public {
-    require(msg.sender == owner, "only the owner can add a participant");
+  function add(address _participant, uint256 _amount) public onlyOwner {
     require(
       minimumAmount <= _amount, "amount must be at least minimumAmount"
     );
-    participants.push(Participant(_beneficiary, _amount, false));
+    // TODO(godsflaw): make sure participant doesn't already exist
+    // TODO(godsflaw): can only add if state is open
+    commitments[_participant] = Commitment(_amount, false);
+    participants.push(_participant);
   }
 
 }

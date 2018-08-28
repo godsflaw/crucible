@@ -1,17 +1,16 @@
 pragma solidity ^0.4.24;
 
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "./Crucible.sol";
 
-contract Foundry {
-  address public owner;
+contract Foundry is Ownable {
   address[] public crucibles;
 
   constructor() public {
     owner = msg.sender;
   }
 
-  function kill() external {
-    require(msg.sender == owner, "only the owner can kill this contract");
+  function kill() external onlyOwner {
     selfdestruct(owner);
   }
 
@@ -25,9 +24,7 @@ contract Foundry {
   }
 
   // deploy a new crucible
-  function newCrucible(address _owner, string _name, uint _startDate, uint _closeDate, uint _endDate, uint256 _minimumAmount)
-    public
-    returns(address)
+  function newCrucible(address _owner, string _name, uint _startDate, uint _closeDate, uint _endDate, uint256 _minimumAmount) public returns(address)
   {
     Crucible crucible = new Crucible(
       _owner, _name, _startDate, _closeDate, _endDate, _minimumAmount

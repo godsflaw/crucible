@@ -9,19 +9,12 @@ contract('Foundry - getCount', async (accounts) => {
   let cu;
   let address;
   let foundry;
-  let startDate;
-  let closeDate;
-  let endDate;
 
   beforeEach(async () => {
     cu = new CrucibleUtils();
     address = new Address();
 
     foundry = await Foundry.new({ from: address.owner });
-
-    startDate = Math.floor(Date.now() / 1000);
-    closeDate = Math.floor(cu.addDays(Date.now(), 1) / 1000);
-    endDate = Math.floor(cu.addDays(Date.now(), 8) / 1000);
   });
 
   afterEach(async () => {
@@ -38,19 +31,19 @@ contract('Foundry - getCount', async (accounts) => {
     await foundry.newCrucible(
       address.oracle,
       'test01',
-      startDate,
-      closeDate,
-      endDate,
-      250000000000000000
+      cu.startDate(),
+      cu.closeDate(),
+      cu.endDate(),
+      cu.minAmountWei
     );
 
     await foundry.newCrucible(
       address.oracle,
       'test02',
-      startDate,
-      closeDate,
-      endDate,
-      250000000000000000
+      cu.startDate(),
+      cu.closeDate(),
+      cu.endDate(),
+      cu.minAmountWei
     );
 
     var result = await foundry.getCount.call();
@@ -60,10 +53,10 @@ contract('Foundry - getCount', async (accounts) => {
     await foundry.newCrucible(
       address.oracle,
       'test03',
-      startDate,
-      closeDate,
-      endDate,
-      250000000000000000
+      cu.startDate(),
+      cu.closeDate(),
+      cu.endDate(),
+      cu.minAmountWei
     );
 
     result = await foundry.getCount.call();

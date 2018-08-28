@@ -16,9 +16,9 @@ contract('Crucible - base', async (accounts) => {
     cu = new CrucibleUtils();
     address = new Address();
 
-    startDate = Math.floor(Date.now() / 1000);
-    closeDate = Math.floor(cu.addDays(Date.now(), 1) / 1000);
-    endDate = Math.floor(cu.addDays(Date.now(), 8) / 1000);
+    startDate = cu.startDate();
+    closeDate = cu.closeDate();
+    endDate = cu.endDate();
 
     crucible = await Crucible.new(
       address.oracle,
@@ -26,7 +26,7 @@ contract('Crucible - base', async (accounts) => {
       startDate,
       closeDate,
       endDate,
-      250000000000000000,
+      cu.minAmountWei,
       { from: address.oracle }
     );
   });
@@ -44,10 +44,10 @@ contract('Crucible - base', async (accounts) => {
     var crucible = await Crucible.new(
       address.empty,
       'empty',
-      startDate,
-      closeDate,
-      endDate,
-      250000000000000000,
+      cu.startDate(),
+      cu.closeDate(),
+      cu.endDate(),
+      cu.minAmountWei,
       { from: address.oracle }
     );
     var oracle = await crucible.owner.call();
@@ -62,25 +62,25 @@ contract('Crucible - base', async (accounts) => {
   });
 
   it('verify the startDate is set', async () => {
-    var startDate = await crucible.startDate.call();
-    assert.equal(startDate.toNumber(), startDate, 'startDate is as expected');
-  });
-
-  it('verify the endDate is set', async () => {
-    var endDate = await crucible.endDate.call();
-    assert.equal(endDate.toNumber(), endDate, 'endDate is as expected');
+    var _startDate = await crucible.startDate.call();
+    assert.equal(_startDate.toNumber(), startDate, 'cu.startDate() is as expected');
   });
 
   it('verify the closeDate is set', async () => {
-    var closeDate = await crucible.closeDate.call();
-    assert.equal(closeDate.toNumber(), closeDate, 'closeDate is as expected');
+    var _closeDate = await crucible.closeDate.call();
+    assert.equal(_closeDate.toNumber(), closeDate, 'cu.closeDate() is as expected');
+  });
+
+  it('verify the endDate is set', async () => {
+    var _endDate = await crucible.endDate.call();
+    assert.equal(_endDate.toNumber(), endDate, 'cu.endDate() is as expected');
   });
 
   it('verify the minimumAmount is set', async () => {
     var minimumAmount = await crucible.minimumAmount.call();
     assert.equal(
       minimumAmount.toNumber(),
-      250000000000000000,
+      cu.minAmountWei,
       'minimumAmount is as expected'
     );
   });
@@ -89,11 +89,11 @@ contract('Crucible - base', async (accounts) => {
     try {
       var crucible = await Crucible.new(
         address.oracle,
-        'startDate test',
-        closeDate,
-        startDate,
-        endDate,
-        250000000000000000,
+        'cu.startDate() test',
+        cu.closeDate(),
+        cu.startDate(),
+        cu.endDate(),
+        cu.minAmountWei,
         { from: address.oracle }
       );
     } catch (err) {
@@ -109,11 +109,11 @@ contract('Crucible - base', async (accounts) => {
     try {
       var crucible = await Crucible.new(
         address.oracle,
-        'startDate test',
-        startDate,
-        endDate,
-        closeDate,
-        250000000000000000,
+        'cu.startDate() test',
+        cu.startDate(),
+        cu.endDate(),
+        cu.closeDate(),
+        cu.minAmountWei,
         { from: address.oracle }
       );
     } catch (err) {
@@ -129,11 +129,11 @@ contract('Crucible - base', async (accounts) => {
     try {
       var crucible = await Crucible.new(
         address.oracle,
-        'startDate test',
-        endDate,
-        closeDate,
-        startDate,
-        250000000000000000,
+        'cu.startDate() test',
+        cu.endDate(),
+        cu.closeDate(),
+        cu.startDate(),
+        cu.minAmountWei,
         { from: address.oracle }
       );
     } catch (err) {
@@ -149,10 +149,10 @@ contract('Crucible - base', async (accounts) => {
     try {
       var crucible = await Crucible.new(
         address.oracle,
-        'startDate test',
-        endDate,
-        closeDate,
-        startDate,
+        'cu.startDate() test',
+        cu.endDate(),
+        cu.closeDate(),
+        cu.startDate(),
         0,
         { from: address.oracle }
       );
