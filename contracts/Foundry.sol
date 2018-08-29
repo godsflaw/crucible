@@ -24,8 +24,7 @@ contract Foundry is Ownable {
   }
 
   // deploy a new crucible
-  function newCrucible(address _owner, string _name, uint _startDate, uint _closeDate, uint _endDate, uint256 _minimumAmount) public returns(address)
-  {
+  function newCrucible(address _owner, string _name, uint _startDate, uint _closeDate, uint _endDate, uint256 _minimumAmount) public returns(address) {
     Crucible crucible = new Crucible(
       _owner, _name, _startDate, _closeDate, _endDate, _minimumAmount
     );

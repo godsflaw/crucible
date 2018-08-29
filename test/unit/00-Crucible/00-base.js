@@ -63,17 +63,17 @@ contract('Crucible - base', async (accounts) => {
 
   it('verify the startDate is set', async () => {
     var _startDate = await crucible.startDate.call();
-    assert.equal(_startDate.toNumber(), startDate, 'cu.startDate() is as expected');
+    assert.equal(_startDate.toNumber(), startDate, 'startDate is as expected');
   });
 
   it('verify the closeDate is set', async () => {
     var _closeDate = await crucible.closeDate.call();
-    assert.equal(_closeDate.toNumber(), closeDate, 'cu.closeDate() is as expected');
+    assert.equal(_closeDate.toNumber(), closeDate, 'closeDate is as expected');
   });
 
   it('verify the endDate is set', async () => {
     var _endDate = await crucible.endDate.call();
-    assert.equal(_endDate.toNumber(), endDate, 'cu.endDate() is as expected');
+    assert.equal(_endDate.toNumber(), endDate, 'endDate is as expected');
   });
 
   it('verify the minimumAmount is set', async () => {
@@ -96,6 +96,7 @@ contract('Crucible - base', async (accounts) => {
         cu.minAmountWei,
         { from: address.oracle }
       );
+      assert(false, 'this call should throw an error');
     } catch (err) {
       assert.equal(
         err.message,
@@ -116,6 +117,7 @@ contract('Crucible - base', async (accounts) => {
         cu.minAmountWei,
         { from: address.oracle }
       );
+      assert(false, 'this call should throw an error');
     } catch (err) {
       assert.equal(
         err.message,
@@ -136,6 +138,7 @@ contract('Crucible - base', async (accounts) => {
         cu.minAmountWei,
         { from: address.oracle }
       );
+      assert(false, 'this call should throw an error');
     } catch (err) {
       assert.equal(
         err.message,
@@ -156,6 +159,7 @@ contract('Crucible - base', async (accounts) => {
         0,
         { from: address.oracle }
       );
+      assert(false, 'this call should throw an error');
     } catch (err) {
       assert.equal(
         err.message,
@@ -164,4 +168,10 @@ contract('Crucible - base', async (accounts) => {
       );
     }
   });
+
+  it('verify CrucibleState is OPEN', async () => {
+    var state = await crucible.state.call();
+    assert.equal(cu.crucibleStateIsOpen(state), true, 'state is OPEN');
+  });
+
 });

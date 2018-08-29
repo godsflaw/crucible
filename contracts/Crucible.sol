@@ -8,14 +8,26 @@ contract Crucible is Ownable {
   uint public closeDate;
   uint public endDate;
   uint256 public minimumAmount;
-//  ufixed16x8 public fee;
   address[] public participants;
   mapping (address => Commitment) public commitments;
+  CrucibleState public state;
+
+  enum CrucibleState {
+    OPEN,
+    CLOSED,
+    FINISHED
+  }
+
+  enum GoalState {
+    WAITING,
+    PASS,
+    FAIL
+  }
 
   struct Commitment {
+    bool exists;
     uint256 amount;
-    // TODO(godsflaw): change to ENUM with (waiting, false, true)
-    bool metGoal;
+    GoalState metGoal;
   }
 
   constructor(address _owner, string _name, uint _startDate, uint _closeDate, uint _endDate, uint256 _minimumAmount) public {
@@ -39,6 +51,11 @@ contract Crucible is Ownable {
     require(_minimumAmount > 0, "minimumAmount must be > 0");
 
     minimumAmount = _minimumAmount;
+    state = CrucibleState.OPEN;
+  }
+
+  function participantExists(address _participant) public constant returns(bool) {
+    return commitments[_participant].exists;
   }
 
   function kill() external onlyOwner {
@@ -46,14 +63,28 @@ contract Crucible is Ownable {
     selfdestruct(owner);
   }
 
-  // TODO(godsflaw): test
-  function add(address _participant, uint256 _amount) public onlyOwner {
+  // add() will allow anyone to add themselves once to the contract.  It will
+  // also alow the oracle to add a participant with the same unique constraint.
+  function add(address _participant) public payable {
     require(
-      minimumAmount <= _amount, "amount must be at least minimumAmount"
+      minimumAmount <= msg.value, "value must be at least minimumAmount"
     );
-    // TODO(godsflaw): make sure participant doesn't already exist
-    // TODO(godsflaw): can only add if state is open
-    commitments[_participant] = Commitment(_amount, false);
+
+    // TODO(godsflaw): find a way to unit test this (it works)
+    require(
+      state == CrucibleState.OPEN, "can only add when in the open state"
+    );
+
+    require(
+      participantExists(_participant) == false, "participant already exists"
+    );
+
+    require(
+      msg.sender == owner || msg.sender == _participant,
+      "participants can only be added by themselves or the contract owner"
+    );
+
+    commitments[_participant] = Commitment(true, msg.value, GoalState.WAITING);
     participants.push(_participant);
   }
 

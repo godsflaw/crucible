@@ -28,18 +28,47 @@ contract('Crucible - add', async (accounts) => {
     await crucible.kill({ from: address.oracle });
   });
 
-  it('can add participant', async () => {
+  it('user can participate', async () => {
     var tx = await cu.add(crucible, 'user1');
 
     var participant = await crucible.participants.call(0);
     assert.equal(participant, address.user1, 'first participant is user1');
 
     var commitment = await crucible.commitments.call(participant);
-    assert.equal(commitment[0].toNumber(), cu.riskAmounttWei, 'risk correct');
-    assert.equal(commitment[1], false, 'goal not met by default');
+    assert.equal(commitment[0], true, 'record exists');
+    assert.equal(commitment[1].toNumber(), cu.riskAmounttWei, 'risk correct');
+    assert.equal(
+      cu.goalStateIsWaiting(commitment[2]), true, 'goal in waiting state'
+    );
+    assert.deepEqual(
+      await web3.eth.getBalance(crucible.address),
+      cu.riskAmounttWei,
+      'contract balance is as expected'
+    );
+  });
+
+  it('owner can add participant', async () => {
+    var tx = await cu.addBySender(crucible, 'oracle', 'user1');
+
+    var participant = await crucible.participants.call(0);
+    assert.equal(participant, address.user1, 'first participant is user1');
+
+    var commitment = await crucible.commitments.call(participant);
+    assert.equal(commitment[0], true, 'record exists');
+    assert.equal(commitment[1].toNumber(), cu.riskAmounttWei, 'risk correct');
+    assert.equal(
+      cu.goalStateIsWaiting(commitment[2]), true, 'goal in waiting state'
+    );
+    assert.deepEqual(
+      await web3.eth.getBalance(crucible.address),
+      cu.riskAmounttWei,
+      'contract balance is as expected'
+    );
   });
 
   it('can add many participants', async () => {
+    var balance = cu.zeroAmountWei;
+
     for (i = 1; i <= 3; i++) {
       var tx = await cu.add(crucible, 'user' + i);
 
@@ -47,14 +76,60 @@ contract('Crucible - add', async (accounts) => {
       assert.equal(participant, address['user' + i], 'first participant is user' + i);
 
       var commitment = await crucible.commitments.call(participant);
-      assert.equal(commitment[0].toNumber(), cu.riskAmounttWei, 'risk correct');
-      assert.equal(commitment[1], false, 'goal not met by default');
+      assert.equal(commitment[0], true, 'record exists');
+      assert.equal(commitment[1].toNumber(), cu.riskAmounttWei, 'risk correct');
+      assert.equal(
+        cu.goalStateIsWaiting(commitment[2]), true, 'goal in waiting state'
+      );
+      balance = balance.plus(cu.riskAmounttWei);
+      assert.deepEqual(
+        await web3.eth.getBalance(crucible.address),
+        balance,
+        'contract balance is as expected'
+      );
     }
+
+    assert.equal(
+      web3.fromWei(balance, 'ether').toNumber(), 1.5, 'ETH balance correct'
+    );
   });
 
   it('add participant with amount below minAmount', async () => {
     try {
-      var tx = await cu.add(crucible, 'user1', cu.tooLowAmounttWei);
+      var tx = await cu.add(crucible, 'user1', cu.tooLowAmountWei);
+      assert(false, 'this call should throw an error');
+    } catch (err) {
+      assert.equal(
+        err.message,
+        'VM Exception while processing transaction: revert',
+        'threw error'
+      );
+    }
+  });
+
+  it('cannot add participant that already exists', async () => {
+    // note: a test for crucible.participantExists() is not needed because
+    // all cases are tested here.
+    var tx1 = await cu.add(crucible, 'user1');
+    var tx2 = await cu.add(crucible, 'user2');
+    var tx3 = await cu.add(crucible, 'user3');
+
+    try {
+      var tx4 = await cu.add(crucible, 'user1');
+      assert(false, 'this call should throw an error');
+    } catch (err) {
+      assert.equal(
+        err.message,
+        'VM Exception while processing transaction: revert',
+        'threw error'
+      );
+    }
+  });
+
+  it('users cannot add other users', async () => {
+    try {
+      var tx = await cu.addBySender(crucible, 'user1', 'user2');
+      assert(false, 'this call should throw an error');
     } catch (err) {
       assert.equal(
         err.message,
