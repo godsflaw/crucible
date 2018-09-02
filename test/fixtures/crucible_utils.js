@@ -29,6 +29,8 @@ function CrucibleUtils(options) {
   this.riskAmounttWei = web3.toWei(this.riskAmountEth, "ether");
 }
 
+CrucibleUtils.prototype.sleep = require('util').promisify(setTimeout);
+
 CrucibleUtils.prototype.addBySender = async function (crucible, sender, participant, _amount) {
   var amount = (_amount === undefined) ? this.riskAmounttWei : _amount;
   return await web3.eth.getTransactionReceipt(
@@ -52,19 +54,28 @@ CrucibleUtils.prototype.addDays = function (date, days) {
   return result;
 };
 
-CrucibleUtils.prototype.startDate = function (daysFromNow) {
-  if (daysFromNow === undefined) { daysFromNow = 0 }
-  return Math.floor(this.addDays(Date.now(), daysFromNow) / 1000);
+CrucibleUtils.prototype.addSeconds = function (date, seconds) {
+  var result = new Date(date);
+  result.setTime(result.getTime() + (seconds * 1000));
+  return result;
 };
 
-CrucibleUtils.prototype.closeDate = function (daysFromNow) {
-  if (daysFromNow === undefined) { daysFromNow = 1 }
-  return Math.floor(this.addDays(Date.now(), daysFromNow) / 1000);
+// default: now
+CrucibleUtils.prototype.startDate = function (secondsFromNow) {
+  if (secondsFromNow === undefined) { secondsFromNow = (86400 * 0) }
+  return Math.floor(this.addSeconds(Date.now(), secondsFromNow) / 1000);
 };
 
-CrucibleUtils.prototype.endDate = function (daysFromNow) {
-  if (daysFromNow === undefined) { daysFromNow = 8 }
-  return Math.floor(this.addDays(Date.now(), daysFromNow) / 1000);
+// default: 1 day from now
+CrucibleUtils.prototype.closeDate = function (secondsFromNow) {
+  if (secondsFromNow === undefined) { secondsFromNow = (86400 * 1) }
+  return Math.floor(this.addSeconds(Date.now(), secondsFromNow) / 1000);
+};
+
+// default: 8 days from now
+CrucibleUtils.prototype.endDate = function (secondsFromNow) {
+  if (secondsFromNow === undefined) { secondsFromNow = (86400 * 8) }
+  return Math.floor(this.addSeconds(Date.now(), secondsFromNow) / 1000);
 };
 
 CrucibleUtils.prototype.getGoalState = function (_state) {

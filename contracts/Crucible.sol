@@ -70,7 +70,7 @@ contract Crucible is Ownable {
       minimumAmount <= msg.value, "value must be at least minimumAmount"
     );
 
-    // TODO(godsflaw): find a way to unit test this (it works)
+    // TODO(godsflaw): test this with close()
     require(
       state == CrucibleState.OPEN, "can only add when in the open state"
     );
@@ -86,6 +86,14 @@ contract Crucible is Ownable {
 
     commitments[_participant] = Commitment(true, msg.value, GoalState.WAITING);
     participants.push(_participant);
+    // TODO(godsflaw): add event here
+  }
+
+  function close() public {
+    require(closeDate <= now, 'can only lock after closeDate');
+    require(state == CrucibleState.OPEN, 'can only close if in OPEN state');
+    state = CrucibleState.CLOSED;
+    // TODO(godsflaw): add state change event here
   }
 
 }
