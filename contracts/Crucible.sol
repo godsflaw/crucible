@@ -58,6 +58,14 @@ contract Crucible is Ownable {
     return commitments[_participant].exists;
   }
 
+  function count()
+    public
+    constant
+    returns(uint)
+  {
+    return participants.length;
+  }
+
   function kill() external onlyOwner {
     // TODO(godsflaw): this should distribute funds back to participants
     selfdestruct(owner);
@@ -89,13 +97,11 @@ contract Crucible is Ownable {
     // TODO(godsflaw): add event here
   }
 
-  // TODO(godsflaw): test this
   function setGoal(address _participant, bool _metGoal) public onlyOwner {
     require(
       state == CrucibleState.CLOSED, "can only setGoal when in closed state"
     );
 
-    // TODO(godsflaw): user must exist
     require(
       participantExists(_participant) == true, "participant doesn't exist"
     );
