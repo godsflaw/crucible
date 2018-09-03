@@ -139,4 +139,35 @@ contract('Crucible - add', async (accounts) => {
     }
   });
 
+  it('cannot add user in closed state', async () => {
+    crucible = await Crucible.new(
+      address.oracle,
+      'test',
+      cu.startDate(),
+      cu.closeDate(1),
+      cu.endDate(3),
+      cu.minAmountWei,
+      { from: address.oracle }
+    );
+    var tx1 = await cu.add(crucible, 'user1');
+    var tx2 = await cu.add(crucible, 'user2');
+    state = await crucible.state.call();
+    assert(cu.crucibleStateIsOpen(state), 'crucible is in the OPEN state');
+    await cu.sleep(1000);
+    var tx3 = await crucible.close.sendTransaction({ 'from': address.oracle });
+    state = await crucible.state.call();
+    assert(cu.crucibleStateIsClosed(state), 'crucible is in the CLOSED state');
+
+    try {
+      var tx3 = await cu.add(crucible, 'user3');
+      assert(false, 'this call should throw an error');
+    } catch (err) {
+      assert.equal(
+        err.message,
+        'VM Exception while processing transaction: revert',
+        'threw error'
+      );
+    }
+  });
+
 });

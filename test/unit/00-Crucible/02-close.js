@@ -17,7 +17,7 @@ contract('Crucible - close', async (accounts) => {
       address.oracle,
       'test',
       cu.startDate(),
-      cu.closeDate(1),
+      cu.closeDate(2),
       cu.endDate(3),
       cu.minAmountWei,
       { from: address.oracle }
@@ -25,7 +25,6 @@ contract('Crucible - close', async (accounts) => {
 
     var tx1 = await cu.add(crucible, 'user1');
     var tx2 = await cu.add(crucible, 'user2');
-    var tx3 = await cu.add(crucible, 'user3');
   });
 
   afterEach(async () => {
@@ -35,7 +34,7 @@ contract('Crucible - close', async (accounts) => {
   it('close changes crucible state to CLOSED', async () => {
     var state = await crucible.state.call();
     assert(cu.crucibleStateIsOpen(state), 'crucible is in the OPEN state');
-    await cu.sleep(1000);
+    await cu.sleep(2000);
     var tx = await crucible.close.sendTransaction({ 'from': address.oracle });
     state = await crucible.state.call();
     assert(cu.crucibleStateIsClosed(state), 'crucible is in the CLOSED state');
@@ -44,7 +43,7 @@ contract('Crucible - close', async (accounts) => {
   it('anyone can change crucible state to CLOSED', async () => {
     var state = await crucible.state.call();
     assert(cu.crucibleStateIsOpen(state), 'crucible is in the OPEN state');
-    await cu.sleep(1000);
+    await cu.sleep(2000);
     var tx = await crucible.close.sendTransaction({ 'from': address.owner });
     state = await crucible.state.call();
     assert(cu.crucibleStateIsClosed(state), 'crucible is in the CLOSED state');
@@ -69,7 +68,7 @@ contract('Crucible - close', async (accounts) => {
     try {
       var state = await crucible.state.call();
       assert(cu.crucibleStateIsOpen(state), 'crucible is in the OPEN state');
-      await cu.sleep(1000);
+      await cu.sleep(2000);
       var tx = await crucible.close.sendTransaction({ 'from': address.oracle });
       state = await crucible.state.call();
       assert(cu.crucibleStateIsClosed(state), 'crucible is in the CLOSED state');
