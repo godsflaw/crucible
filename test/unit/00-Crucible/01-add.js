@@ -17,7 +17,7 @@ contract('Crucible - add', async (accounts) => {
       address.oracle,
       'test',
       cu.startDate(),
-      cu.closeDate(),
+      cu.lockDate(),
       cu.endDate(),
       cu.minAmountWei,
       { from: address.oracle }
@@ -139,12 +139,12 @@ contract('Crucible - add', async (accounts) => {
     }
   });
 
-  it('cannot add user in closed state', async () => {
+  it('cannot add user in locked state', async () => {
     crucible = await Crucible.new(
       address.oracle,
       'test',
       cu.startDate(),
-      cu.closeDate(1),
+      cu.lockDate(1),
       cu.endDate(3),
       cu.minAmountWei,
       { from: address.oracle }
@@ -154,9 +154,9 @@ contract('Crucible - add', async (accounts) => {
     state = await crucible.state.call();
     assert(cu.crucibleStateIsOpen(state), 'crucible is in the OPEN state');
     await cu.sleep(1000);
-    var tx3 = await crucible.close.sendTransaction({ 'from': address.oracle });
+    var tx3 = await crucible.lock.sendTransaction({ 'from': address.oracle });
     state = await crucible.state.call();
-    assert(cu.crucibleStateIsClosed(state), 'crucible is in the CLOSED state');
+    assert(cu.crucibleStateIsLocked(state), 'crucible is in the LOCKED state');
 
     try {
       var tx3 = await cu.add(crucible, 'user3');

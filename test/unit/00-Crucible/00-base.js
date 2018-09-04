@@ -9,7 +9,7 @@ contract('Crucible - base', async (accounts) => {
   let address;
   let crucible;
   let startDate;
-  let closeDate;
+  let lockDate;
   let endDate;
 
   beforeEach(async () => {
@@ -17,14 +17,14 @@ contract('Crucible - base', async (accounts) => {
     address = new Address();
 
     startDate = cu.startDate();
-    closeDate = cu.closeDate();
+    lockDate = cu.lockDate();
     endDate = cu.endDate();
 
     crucible = await Crucible.new(
       address.oracle,
       'test',
       startDate,
-      closeDate,
+      lockDate,
       endDate,
       cu.minAmountWei,
       { from: address.oracle }
@@ -45,7 +45,7 @@ contract('Crucible - base', async (accounts) => {
       address.empty,
       'empty',
       cu.startDate(),
-      cu.closeDate(),
+      cu.lockDate(),
       cu.endDate(),
       cu.minAmountWei,
       { from: address.oracle }
@@ -66,9 +66,9 @@ contract('Crucible - base', async (accounts) => {
     assert.equal(_startDate.toNumber(), startDate, 'startDate is as expected');
   });
 
-  it('verify the closeDate is set', async () => {
-    var _closeDate = await crucible.closeDate.call();
-    assert.equal(_closeDate.toNumber(), closeDate, 'closeDate is as expected');
+  it('verify the lockDate is set', async () => {
+    var _lockDate = await crucible.lockDate.call();
+    assert.equal(_lockDate.toNumber(), lockDate, 'lockDate is as expected');
   });
 
   it('verify the endDate is set', async () => {
@@ -85,12 +85,12 @@ contract('Crucible - base', async (accounts) => {
     );
   });
 
-  it('startDate must be less than closeDate', async () => {
+  it('startDate must be less than lockDate', async () => {
     try {
       var crucible = await Crucible.new(
         address.oracle,
         'cu.startDate() test',
-        cu.closeDate(),
+        cu.lockDate(),
         cu.startDate(),
         cu.endDate(),
         cu.minAmountWei,
@@ -106,14 +106,14 @@ contract('Crucible - base', async (accounts) => {
     }
   });
 
-  it('closeDate must be less than endDate', async () => {
+  it('lockDate must be less than endDate', async () => {
     try {
       var crucible = await Crucible.new(
         address.oracle,
         'cu.startDate() test',
         cu.startDate(),
         cu.endDate(),
-        cu.closeDate(),
+        cu.lockDate(),
         cu.minAmountWei,
         { from: address.oracle }
       );
@@ -133,7 +133,7 @@ contract('Crucible - base', async (accounts) => {
         address.oracle,
         'cu.startDate() test',
         cu.endDate(),
-        cu.closeDate(),
+        cu.lockDate(),
         cu.startDate(),
         cu.minAmountWei,
         { from: address.oracle }
@@ -154,7 +154,7 @@ contract('Crucible - base', async (accounts) => {
         address.oracle,
         'cu.startDate() test',
         cu.endDate(),
-        cu.closeDate(),
+        cu.lockDate(),
         cu.startDate(),
         0,
         { from: address.oracle }

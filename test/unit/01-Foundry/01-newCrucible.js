@@ -27,7 +27,7 @@ contract('Foundry - newCrucible', async (accounts) => {
       address.oracle,
       'deadbeef',
       cu.startDate(),
-      cu.closeDate(),
+      cu.lockDate(),
       cu.endDate(),
       cu.minAmountWei
     );

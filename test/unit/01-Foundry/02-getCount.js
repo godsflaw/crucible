@@ -32,7 +32,7 @@ contract('Foundry - getCount', async (accounts) => {
       address.oracle,
       'test01',
       cu.startDate(),
-      cu.closeDate(),
+      cu.lockDate(),
       cu.endDate(),
       cu.minAmountWei
     );
@@ -41,7 +41,7 @@ contract('Foundry - getCount', async (accounts) => {
       address.oracle,
       'test02',
       cu.startDate(),
-      cu.closeDate(),
+      cu.lockDate(),
       cu.endDate(),
       cu.minAmountWei
     );
@@ -54,7 +54,7 @@ contract('Foundry - getCount', async (accounts) => {
       address.oracle,
       'test03',
       cu.startDate(),
-      cu.closeDate(),
+      cu.lockDate(),
       cu.endDate(),
       cu.minAmountWei
     );

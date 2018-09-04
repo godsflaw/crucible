@@ -5,7 +5,7 @@ const BigNumber = web3.BigNumber;
 const Address = require('./address');
 
 var GoalState = Object.freeze({ 'WAITING':1, 'PASS':2, 'FAIL':3 })
-var CrucibleState = Object.freeze({ 'OPEN':1, 'CLOSED':2, 'FINISHED':3 })
+var CrucibleState = Object.freeze({ 'OPEN':1, 'LOCKED':2, 'FINISHED':3 })
 
 function CrucibleUtils(options) {
   if (false === (this instanceof CrucibleUtils)) {
@@ -67,7 +67,7 @@ CrucibleUtils.prototype.startDate = function (secondsFromNow) {
 };
 
 // default: 1 day from now
-CrucibleUtils.prototype.closeDate = function (secondsFromNow) {
+CrucibleUtils.prototype.lockDate = function (secondsFromNow) {
   if (secondsFromNow === undefined) { secondsFromNow = (86400 * 1) }
   return Math.floor(this.addSeconds(Date.now(), secondsFromNow) / 1000);
 };
@@ -124,7 +124,7 @@ CrucibleUtils.prototype.getCrucibleState = function (_state) {
 
   switch(_state.toNumber()) {
     case 1:
-      state = CrucibleState.CLOSED;
+      state = CrucibleState.LOCKED;
       break;
     case 2:
       state = CrucibleState.FINISHED;
@@ -144,8 +144,8 @@ CrucibleUtils.prototype.crucibleStateIsOpen = function (state) {
   return false;
 }
 
-CrucibleUtils.prototype.crucibleStateIsClosed = function (state) {
-  if (this.getCrucibleState(state) === CrucibleState.CLOSED) {
+CrucibleUtils.prototype.crucibleStateIsLocked = function (state) {
+  if (this.getCrucibleState(state) === CrucibleState.LOCKED) {
     return true;
   }
 

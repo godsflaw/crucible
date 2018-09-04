@@ -5,7 +5,7 @@ import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 contract Crucible is Ownable {
   string public name;
   uint public startDate;
-  uint public closeDate;
+  uint public lockDate;
   uint public endDate;
   uint256 public minimumAmount;
   address[] public participants;
@@ -14,7 +14,7 @@ contract Crucible is Ownable {
 
   enum CrucibleState {
     OPEN,
-    CLOSED,
+    LOCKED,
     FINISHED
   }
 
@@ -26,11 +26,12 @@ contract Crucible is Ownable {
 
   struct Commitment {
     bool exists;
+    // TODO(godsflaw): add _beneficiary for the case where money goes to enemy
     uint256 amount;
     GoalState metGoal;
   }
 
-  constructor(address _owner, string _name, uint _startDate, uint _closeDate, uint _endDate, uint256 _minimumAmount) public {
+  constructor(address _owner, string _name, uint _startDate, uint _lockDate, uint _endDate, uint256 _minimumAmount) public {
     name = _name;
 
     if (_owner == address(0x0)) {
@@ -40,12 +41,12 @@ contract Crucible is Ownable {
     }
 
     require(
-      _startDate < _closeDate && _closeDate < _endDate,
-      "startDate must be < closeDate and closeDate must be < endDate"
+      _startDate < _lockDate && _lockDate < _endDate,
+      "startDate must be < lockDate and lockDate must be < endDate"
     );
 
     startDate = _startDate;
-    closeDate = _closeDate;
+    lockDate = _lockDate;
     endDate = _endDate;
 
     require(_minimumAmount > 0, "minimumAmount must be > 0");
@@ -67,7 +68,8 @@ contract Crucible is Ownable {
   }
 
   function kill() external onlyOwner {
-    // TODO(godsflaw): this should distribute funds back to participants
+    // TODO(godsflaw): call finish() or distribute funds?
+    // TODO(godsflaw): clean up Foundry?
     selfdestruct(owner);
   }
 
@@ -99,7 +101,7 @@ contract Crucible is Ownable {
 
   function setGoal(address _participant, bool _metGoal) public onlyOwner {
     require(
-      state == CrucibleState.CLOSED, "can only setGoal when in closed state"
+      state == CrucibleState.LOCKED, "can only setGoal when in locked state"
     );
 
     require(
@@ -115,11 +117,25 @@ contract Crucible is Ownable {
     // TODO(godsflaw): add state change event here
   }
 
-  function close() public {
-    require(closeDate <= now, 'can only lock after closeDate');
-    require(state == CrucibleState.OPEN, 'can only close if in OPEN state');
-    state = CrucibleState.CLOSED;
+  function lock() public {
+    require(lockDate <= now, 'can only lock after lockDate');
+    require(state == CrucibleState.OPEN, 'can only lock if in OPEN state');
+    state = CrucibleState.LOCKED;
 
+    // TODO(godsflaw): add state change event here
+  }
+
+  function finish() public onlyOwner {
+    if (state == CrucibleState.FINISHED) {
+      return;
+    }
+
+    require(endDate <= now, 'can only finish after endDate');
+    require(state == CrucibleState.LOCKED, 'can only finish if in LOCKED state');
+
+    // TODO(godsflaw): call distribution function
+
+    state = CrucibleState.FINISHED;
     // TODO(godsflaw): add state change event here
   }
 

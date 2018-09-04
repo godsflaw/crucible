@@ -4,7 +4,7 @@ const truffleAssert = require('truffle-assertions');
 
 const Crucible = artifacts.require("./Crucible.sol");
 
-contract('Crucible - close', async (accounts) => {
+contract('Crucible - lock', async (accounts) => {
   let cu;
   let address;
   let crucible;
@@ -17,7 +17,7 @@ contract('Crucible - close', async (accounts) => {
       address.oracle,
       'test',
       cu.startDate(),
-      cu.closeDate(2),
+      cu.lockDate(2),
       cu.endDate(3),
       cu.minAmountWei,
       { from: address.oracle }
@@ -31,29 +31,29 @@ contract('Crucible - close', async (accounts) => {
     await crucible.kill({ from: address.oracle });
   });
 
-  it('close changes crucible state to CLOSED', async () => {
+  it('lock changes crucible state to LOCKED', async () => {
     var state = await crucible.state.call();
     assert(cu.crucibleStateIsOpen(state), 'crucible is in the OPEN state');
     await cu.sleep(2000);
-    var tx = await crucible.close.sendTransaction({ 'from': address.oracle });
+    var tx = await crucible.lock.sendTransaction({ 'from': address.oracle });
     state = await crucible.state.call();
-    assert(cu.crucibleStateIsClosed(state), 'crucible is in the CLOSED state');
+    assert(cu.crucibleStateIsLocked(state), 'crucible is in the LOCKED state');
   });
 
-  it('anyone can change crucible state to CLOSED', async () => {
+  it('anyone can change crucible state to LOCKED', async () => {
     var state = await crucible.state.call();
     assert(cu.crucibleStateIsOpen(state), 'crucible is in the OPEN state');
     await cu.sleep(2000);
-    var tx = await crucible.close.sendTransaction({ 'from': address.owner });
+    var tx = await crucible.lock.sendTransaction({ 'from': address.owner });
     state = await crucible.state.call();
-    assert(cu.crucibleStateIsClosed(state), 'crucible is in the CLOSED state');
+    assert(cu.crucibleStateIsLocked(state), 'crucible is in the LOCKED state');
   });
 
-  it('close only changes state if we are past closeDate', async () => {
+  it('lock only changes state if we are past lockDate', async () => {
     try {
       var state = await crucible.state.call();
       assert(cu.crucibleStateIsOpen(state), 'crucible is in the OPEN state');
-      var tx = await crucible.close.sendTransaction({ 'from': address.oracle });
+      var tx = await crucible.lock.sendTransaction({ 'from': address.oracle });
       assert(false, 'this call should throw an error');
     } catch(err) {
       assert.equal(
@@ -64,15 +64,15 @@ contract('Crucible - close', async (accounts) => {
     }
   });
 
-  it('close only changes state if we are in the OPEN state', async () => {
+  it('lock only changes state if we are in the OPEN state', async () => {
     try {
       var state = await crucible.state.call();
       assert(cu.crucibleStateIsOpen(state), 'crucible is in the OPEN state');
       await cu.sleep(2000);
-      var tx = await crucible.close.sendTransaction({ 'from': address.oracle });
+      var tx = await crucible.lock.sendTransaction({ 'from': address.oracle });
       state = await crucible.state.call();
-      assert(cu.crucibleStateIsClosed(state), 'crucible is in the CLOSED state');
-      tx = await crucible.close.sendTransaction({ 'from': address.oracle });
+      assert(cu.crucibleStateIsLocked(state), 'crucible is in the LOCKED state');
+      tx = await crucible.lock.sendTransaction({ 'from': address.oracle });
       assert(false, 'this call should throw an error');
     } catch(err) {
       assert.equal(

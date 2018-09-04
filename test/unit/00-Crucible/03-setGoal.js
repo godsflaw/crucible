@@ -17,7 +17,7 @@ contract('Crucible - setGoal', async (accounts) => {
       address.oracle,
       'test',
       cu.startDate(),
-      cu.closeDate(1),
+      cu.lockDate(1),
       cu.endDate(3),
       cu.minAmountWei,
       { from: address.oracle }
@@ -33,7 +33,7 @@ contract('Crucible - setGoal', async (accounts) => {
 
   it('setGoal works for PASS and FAIL', async () => {
     await cu.sleep(1000);
-    var tx = await crucible.close.sendTransaction({ 'from': address.oracle });
+    var tx = await crucible.lock.sendTransaction({ 'from': address.oracle });
 
     tx = await crucible.setGoal.sendTransaction(
       address.user1, true, { 'from': address.oracle }
@@ -61,7 +61,7 @@ contract('Crucible - setGoal', async (accounts) => {
 
   it('setGoal throws error if we are not the owner', async () => {
     await cu.sleep(1000);
-    var tx = await crucible.close.sendTransaction({ 'from': address.oracle });
+    var tx = await crucible.lock.sendTransaction({ 'from': address.oracle });
 
     try {
       tx = await crucible.setGoal.sendTransaction(
@@ -77,7 +77,7 @@ contract('Crucible - setGoal', async (accounts) => {
     }
   });
 
-  it('setGoal state must be CLOSED', async () => {
+  it('setGoal state must be LOCKED', async () => {
     try {
       tx = await crucible.setGoal.sendTransaction(
         address.user1, true, { 'from': address.oracle }
@@ -94,7 +94,7 @@ contract('Crucible - setGoal', async (accounts) => {
 
   it('setGoal throws if participant does not exist', async () => {
     await cu.sleep(1000);
-    var tx = await crucible.close.sendTransaction({ 'from': address.oracle });
+    var tx = await crucible.lock.sendTransaction({ 'from': address.oracle });
 
     tx = await crucible.setGoal.sendTransaction(
       address.user1, true, { 'from': address.oracle }

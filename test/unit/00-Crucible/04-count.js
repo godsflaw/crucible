@@ -17,7 +17,7 @@ contract('Crucible - count', async (accounts) => {
       address.oracle,
       'test',
       cu.startDate(),
-      cu.closeDate(1),
+      cu.lockDate(1),
       cu.endDate(3),
       cu.minAmountWei,
       { from: address.oracle }
