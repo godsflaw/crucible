@@ -1,5 +1,7 @@
 const CrucibleUtils = require('../../fixtures/crucible_utils');
 const Address = require('../../fixtures/address');
+const { expectThrow } = require('../../fixtures/expectThrow');
+const { EVMRevert } = require('../../fixtures/EVMRevert');
 const truffleAssert = require('truffle-assertions');
 
 const Crucible = artifacts.require("./Crucible.sol");
@@ -86,92 +88,61 @@ contract('Crucible - base', async (accounts) => {
   });
 
   it('startDate must be less than lockDate', async () => {
-    try {
-      var crucible = await Crucible.new(
-        address.oracle,
-        'cu.startDate() test',
-        cu.lockDate(),
-        cu.startDate(),
-        cu.endDate(),
-        cu.minAmountWei,
-        { from: address.oracle }
-      );
-      assert(false, 'this call should throw an error');
-    } catch (err) {
-      assert.equal(
-        err.message,
-        'VM Exception while processing transaction: revert',
-        'threw error'
-      );
-    }
+    await expectThrow(Crucible.new(
+      address.oracle,
+      'cu.startDate() test',
+      cu.lockDate(),
+      cu.startDate(),
+      cu.endDate(),
+      cu.minAmountWei,
+      { from: address.oracle }
+    ), EVMRevert);
   });
 
   it('lockDate must be less than endDate', async () => {
-    try {
-      var crucible = await Crucible.new(
-        address.oracle,
-        'cu.startDate() test',
-        cu.startDate(),
-        cu.endDate(),
-        cu.lockDate(),
-        cu.minAmountWei,
-        { from: address.oracle }
-      );
-      assert(false, 'this call should throw an error');
-    } catch (err) {
-      assert.equal(
-        err.message,
-        'VM Exception while processing transaction: revert',
-        'threw error'
-      );
-    }
+    await expectThrow(Crucible.new(
+      address.oracle,
+      'cu.startDate() test',
+      cu.startDate(),
+      cu.endDate(),
+      cu.lockDate(),
+      cu.minAmountWei,
+      { from: address.oracle }
+    ), EVMRevert);
   });
 
   it('startDate must be less than endDate', async () => {
-    try {
-      var crucible = await Crucible.new(
-        address.oracle,
-        'cu.startDate() test',
-        cu.endDate(),
-        cu.lockDate(),
-        cu.startDate(),
-        cu.minAmountWei,
-        { from: address.oracle }
-      );
-      assert(false, 'this call should throw an error');
-    } catch (err) {
-      assert.equal(
-        err.message,
-        'VM Exception while processing transaction: revert',
-        'threw error'
-      );
-    }
+    await expectThrow(Crucible.new(
+      address.oracle,
+      'cu.startDate() test',
+      cu.endDate(),
+      cu.lockDate(),
+      cu.startDate(),
+      cu.minAmountWei,
+      { from: address.oracle }
+    ), EVMRevert);
   });
 
   it('minimumAmount must be greater than 0', async () => {
-    try {
-      var crucible = await Crucible.new(
-        address.oracle,
-        'cu.startDate() test',
-        cu.endDate(),
-        cu.lockDate(),
-        cu.startDate(),
-        0,
-        { from: address.oracle }
-      );
-      assert(false, 'this call should throw an error');
-    } catch (err) {
-      assert.equal(
-        err.message,
-        'VM Exception while processing transaction: revert',
-        'threw error'
-      );
-    }
+    await expectThrow(Crucible.new(
+      address.oracle,
+      'cu.startDate() test',
+      cu.endDate(),
+      cu.lockDate(),
+      cu.startDate(),
+      0,
+      { from: address.oracle }
+    ), EVMRevert);
   });
 
   it('verify CrucibleState is OPEN', async () => {
     var state = await crucible.state.call();
     assert.equal(cu.crucibleStateIsOpen(state), true, 'state is OPEN');
+  });
+
+  it('verify released is 0', async () => {
+    var released = await crucible.released.call();
+    assert.equal(released.toNumber(), 0, 'released is 0');
   });
 
 });

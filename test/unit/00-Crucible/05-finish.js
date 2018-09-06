@@ -1,5 +1,7 @@
 const CrucibleUtils = require('../../fixtures/crucible_utils');
 const Address = require('../../fixtures/address');
+const { expectThrow } = require('../../fixtures/expectThrow');
+const { EVMRevert } = require('../../fixtures/EVMRevert');
 const truffleAssert = require('truffle-assertions');
 
 const Crucible = artifacts.require("./Crucible.sol");
@@ -62,53 +64,33 @@ contract('Crucible - finish', async (accounts) => {
   it('only oracle can change crucible state to FINISHED', async () => {
     await cu.sleep(2000);
     var tx = await crucible.lock.sendTransaction({ 'from': address.oracle });
+    var state = await crucible.state.call();
+    assert(cu.crucibleStateIsLocked(state), 'crucible is in the LOCKED state');
+    await cu.sleep(2000);
 
-    try {
-      var state = await crucible.state.call();
-      assert(cu.crucibleStateIsLocked(state), 'crucible is in the LOCKED state');
-      await cu.sleep(2000);
-      tx = await crucible.finish.sendTransaction({ 'from': address.user1 });
-      assert(false, 'this call should throw an error');
-    } catch(err) {
-      assert.equal(
-        err.message,
-        'VM Exception while processing transaction: revert',
-        'threw error'
-      );
-    }
+    await expectThrow(crucible.finish.sendTransaction(
+      { 'from': address.user1 }
+    ), EVMRevert);
   });
 
   it('finish only changes state if we are past endDate', async () => {
     await cu.sleep(2000);
     var tx = await crucible.lock.sendTransaction({ 'from': address.oracle });
+    var state = await crucible.state.call();
+    assert(cu.crucibleStateIsLocked(state), 'crucible is in the LOCKED state');
 
-    try {
-      var state = await crucible.state.call();
-      assert(cu.crucibleStateIsLocked(state), 'crucible is in the LOCKED state');
-      tx = await crucible.finish.sendTransaction({ 'from': address.oracle });
-      assert(false, 'this call should throw an error');
-    } catch(err) {
-      assert.equal(
-        err.message,
-        'VM Exception while processing transaction: revert',
-        'threw error'
-      );
-    }
+    await expectThrow(crucible.finish.sendTransaction(
+      { 'from': address.oracle }
+    ), EVMRevert);
   });
 
   it('finish only changes state from LOCKED to FINISHED', async () => {
-    try {
-      var state = await crucible.state.call();
-      assert(cu.crucibleStateIsOpen(state), 'crucible is in the OPEN state');
-      tx = await crucible.finish.sendTransaction({ 'from': address.oracle });
-      assert(false, 'this call should throw an error');
-    } catch(err) {
-      assert.equal(
-        err.message,
-        'VM Exception while processing transaction: revert',
-        'threw error'
-      );
-    }
+    var state = await crucible.state.call();
+    assert(cu.crucibleStateIsOpen(state), 'crucible is in the OPEN state');
+
+    await expectThrow(crucible.finish.sendTransaction(
+      { 'from': address.oracle }
+    ), EVMRevert);
   });
 
 });

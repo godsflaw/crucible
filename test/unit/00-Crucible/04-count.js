@@ -1,5 +1,7 @@
 const CrucibleUtils = require('../../fixtures/crucible_utils');
 const Address = require('../../fixtures/address');
+const { expectThrow } = require('../../fixtures/expectThrow');
+const { EVMRevert } = require('../../fixtures/EVMRevert');
 const truffleAssert = require('truffle-assertions');
 
 const Crucible = artifacts.require("./Crucible.sol");

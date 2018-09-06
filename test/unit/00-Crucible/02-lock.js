@@ -1,5 +1,7 @@
 const CrucibleUtils = require('../../fixtures/crucible_utils');
 const Address = require('../../fixtures/address');
+const { expectThrow } = require('../../fixtures/expectThrow');
+const { EVMRevert } = require('../../fixtures/EVMRevert');
 const truffleAssert = require('truffle-assertions');
 
 const Crucible = artifacts.require("./Crucible.sol");
@@ -18,7 +20,7 @@ contract('Crucible - lock', async (accounts) => {
       'test',
       cu.startDate(),
       cu.lockDate(2),
-      cu.endDate(3),
+      cu.endDate(10),
       cu.minAmountWei,
       { from: address.oracle }
     );
@@ -50,37 +52,23 @@ contract('Crucible - lock', async (accounts) => {
   });
 
   it('lock only changes state if we are past lockDate', async () => {
-    try {
-      var state = await crucible.state.call();
-      assert(cu.crucibleStateIsOpen(state), 'crucible is in the OPEN state');
-      var tx = await crucible.lock.sendTransaction({ 'from': address.oracle });
-      assert(false, 'this call should throw an error');
-    } catch(err) {
-      assert.equal(
-        err.message,
-        'VM Exception while processing transaction: revert',
-        'threw error'
-      );
-    }
+    var state = await crucible.state.call();
+    assert(cu.crucibleStateIsOpen(state), 'crucible is in the OPEN state');
+    await expectThrow(
+      crucible.lock.sendTransaction({ 'from': address.oracle }), EVMRevert
+    );
   });
 
   it('lock only changes state if we are in the OPEN state', async () => {
-    try {
-      var state = await crucible.state.call();
-      assert(cu.crucibleStateIsOpen(state), 'crucible is in the OPEN state');
-      await cu.sleep(2000);
-      var tx = await crucible.lock.sendTransaction({ 'from': address.oracle });
-      state = await crucible.state.call();
-      assert(cu.crucibleStateIsLocked(state), 'crucible is in the LOCKED state');
-      tx = await crucible.lock.sendTransaction({ 'from': address.oracle });
-      assert(false, 'this call should throw an error');
-    } catch(err) {
-      assert.equal(
-        err.message,
-        'VM Exception while processing transaction: revert',
-        'threw error'
-      );
-    }
+    var state = await crucible.state.call();
+    assert(cu.crucibleStateIsOpen(state), 'crucible is in the OPEN state');
+    await cu.sleep(2000);
+    var tx = await crucible.lock.sendTransaction({ 'from': address.oracle });
+    state = await crucible.state.call();
+    assert(cu.crucibleStateIsLocked(state), 'crucible is in the LOCKED state');
+    await expectThrow(
+      crucible.lock.sendTransaction({ 'from': address.oracle }), EVMRevert
+    );
   });
 
 });

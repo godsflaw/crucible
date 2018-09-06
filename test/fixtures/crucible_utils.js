@@ -129,6 +129,9 @@ CrucibleUtils.prototype.getCrucibleState = function (_state) {
     case 2:
       state = CrucibleState.FINISHED;
       break;
+    case 3:
+      state = CrucibleState.PAID;
+      break;
     default:
       state = CrucibleState.OPEN;
   }
@@ -154,6 +157,14 @@ CrucibleUtils.prototype.crucibleStateIsLocked = function (state) {
 
 CrucibleUtils.prototype.crucibleStateIsFinished = function (state) {
   if (this.getCrucibleState(state) === CrucibleState.FINISHED) {
+    return true;
+  }
+
+  return false;
+}
+
+CrucibleUtils.prototype.crucibleStateIsPaid = function (state) {
+  if (this.getCrucibleState(state) === CrucibleState.PAID) {
     return true;
   }
 

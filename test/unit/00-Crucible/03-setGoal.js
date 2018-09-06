@@ -1,5 +1,7 @@
 const CrucibleUtils = require('../../fixtures/crucible_utils');
 const Address = require('../../fixtures/address');
+const { expectThrow } = require('../../fixtures/expectThrow');
+const { EVMRevert } = require('../../fixtures/EVMRevert');
 const truffleAssert = require('truffle-assertions');
 
 const Crucible = artifacts.require("./Crucible.sol");
@@ -62,34 +64,15 @@ contract('Crucible - setGoal', async (accounts) => {
   it('setGoal throws error if we are not the owner', async () => {
     await cu.sleep(1000);
     var tx = await crucible.lock.sendTransaction({ 'from': address.oracle });
-
-    try {
-      tx = await crucible.setGoal.sendTransaction(
-        address.user1, true, { 'from': address.user1 }
-      );
-      assert(false, 'this call should throw an error');
-    } catch(err) {
-      assert.equal(
-        err.message,
-        'VM Exception while processing transaction: revert',
-        'threw error'
-      );
-    }
+    await expectThrow(crucible.setGoal.sendTransaction(
+      address.user1, true, { 'from': address.user1 }
+    ), EVMRevert);
   });
 
   it('setGoal state must be LOCKED', async () => {
-    try {
-      tx = await crucible.setGoal.sendTransaction(
-        address.user1, true, { 'from': address.oracle }
-      );
-      assert(false, 'this call should throw an error');
-    } catch(err) {
-      assert.equal(
-        err.message,
-        'VM Exception while processing transaction: revert',
-        'threw error'
-      );
-    }
+    await expectThrow(crucible.setGoal.sendTransaction(
+      address.user1, true, { 'from': address.oracle }
+    ), EVMRevert);
   });
 
   it('setGoal throws if participant does not exist', async () => {
@@ -104,18 +87,9 @@ contract('Crucible - setGoal', async (accounts) => {
       address.user2, false, { 'from': address.oracle }
     );
 
-    try {
-      tx = await crucible.setGoal.sendTransaction(
-        address.user3, true, { 'from': address.oracle }
-      );
-      assert(false, 'this call should throw an error');
-    } catch(err) {
-      assert.equal(
-        err.message,
-        'VM Exception while processing transaction: revert',
-        'threw error'
-      );
-    }
+    await expectThrow(crucible.setGoal.sendTransaction(
+      address.user3, true, { 'from': address.oracle }
+    ), EVMRevert);
   });
 
 });

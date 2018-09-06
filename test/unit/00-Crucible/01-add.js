@@ -1,5 +1,7 @@
 const CrucibleUtils = require('../../fixtures/crucible_utils');
 const Address = require('../../fixtures/address');
+const { expectThrow } = require('../../fixtures/expectThrow');
+const { EVMRevert } = require('../../fixtures/EVMRevert');
 const truffleAssert = require('truffle-assertions');
 
 const Crucible = artifacts.require("./Crucible.sol");
@@ -95,16 +97,7 @@ contract('Crucible - add', async (accounts) => {
   });
 
   it('add participant with amount below minAmount', async () => {
-    try {
-      var tx = await cu.add(crucible, 'user1', cu.tooLowAmountWei);
-      assert(false, 'this call should throw an error');
-    } catch (err) {
-      assert.equal(
-        err.message,
-        'VM Exception while processing transaction: revert',
-        'threw error'
-      );
-    }
+    await expectThrow(cu.add(crucible, 'user1', cu.tooLowAmountWei), EVMRevert);
   });
 
   it('cannot add participant that already exists', async () => {
@@ -114,29 +107,11 @@ contract('Crucible - add', async (accounts) => {
     var tx2 = await cu.add(crucible, 'user2');
     var tx3 = await cu.add(crucible, 'user3');
 
-    try {
-      var tx4 = await cu.add(crucible, 'user1');
-      assert(false, 'this call should throw an error');
-    } catch (err) {
-      assert.equal(
-        err.message,
-        'VM Exception while processing transaction: revert',
-        'threw error'
-      );
-    }
+    await expectThrow(cu.add(crucible, 'user1'), EVMRevert);
   });
 
   it('users cannot add other users', async () => {
-    try {
-      var tx = await cu.addBySender(crucible, 'user1', 'user2');
-      assert(false, 'this call should throw an error');
-    } catch (err) {
-      assert.equal(
-        err.message,
-        'VM Exception while processing transaction: revert',
-        'threw error'
-      );
-    }
+    await expectThrow(cu.addBySender(crucible, 'user1', 'user2'), EVMRevert);
   });
 
   it('cannot add user in locked state', async () => {
@@ -158,16 +133,7 @@ contract('Crucible - add', async (accounts) => {
     state = await crucible.state.call();
     assert(cu.crucibleStateIsLocked(state), 'crucible is in the LOCKED state');
 
-    try {
-      var tx3 = await cu.add(crucible, 'user3');
-      assert(false, 'this call should throw an error');
-    } catch (err) {
-      assert.equal(
-        err.message,
-        'VM Exception while processing transaction: revert',
-        'threw error'
-      );
-    }
+    await expectThrow(cu.add(crucible, 'user3'), EVMRevert);
   });
 
 });
