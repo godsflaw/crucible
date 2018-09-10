@@ -27,13 +27,14 @@ contract('Crucible - setGoal', async (accounts) => {
 
     var tx1 = await cu.add(crucible, 'user1');
     var tx2 = await cu.add(crucible, 'user2');
+    var tx3 = await cu.add(crucible, 'user3');
   });
 
   afterEach(async () => {
     await crucible.kill({ from: address.oracle });
   });
 
-  it('setGoal works for PASS and FAIL', async () => {
+  it('setGoal works for PASS and FAIL in LOCKED and JUDGEMENT', async () => {
     await cu.sleep(1000);
     var tx = await crucible.lock.sendTransaction({ 'from': address.oracle });
 
@@ -59,6 +60,45 @@ contract('Crucible - setGoal', async (accounts) => {
       cu.goalStateIsFail(commitment[2]), true, 'goal in fail state'
     );
 
+    await cu.sleep(2000);
+    tx = await crucible.judgement.sendTransaction({ 'from': address.oracle });
+    tx = await crucible.setGoal.sendTransaction(
+      address.user3, true, { 'from': address.oracle }
+    );
+
+    var commitment = await crucible.commitments.call(address.user3);
+    assert.equal(commitment[0], true, 'record exists');
+    assert.equal(commitment[1].toNumber(), cu.riskAmounttWei, 'risk correct');
+    assert.equal(
+      cu.goalStateIsPass(commitment[2]), true, 'goal in pass state'
+    );
+
+  });
+
+  it('setGoal emits CommitmentStateChange', async () => {
+    await cu.sleep(1000);
+    var tx = await crucible.lock.sendTransaction({ 'from': address.oracle });
+
+    tx = await crucible.setGoal(
+      address.user1, true, { 'from': address.oracle }
+    );
+
+    truffleAssert.eventEmitted(tx, 'CommitmentStateChange', (ev) => {
+      return ev.participant === address.user1 &&
+        cu.goalStateIsWaiting(ev.fromState) &&
+        cu.goalStateIsPass(ev.toState);
+    }, 'fromState and toState are correct');
+
+    tx = await crucible.setGoal(
+      address.user2, false, { 'from': address.oracle }
+    );
+
+    truffleAssert.eventEmitted(tx, 'CommitmentStateChange', (ev) => {
+      return ev.participant === address.user2 &&
+        cu.goalStateIsWaiting(ev.fromState) &&
+        cu.goalStateIsFail(ev.toState);
+    }, 'fromState and toState are correct');
+
   });
 
   it('setGoal throws error if we are not the owner', async () => {
@@ -69,7 +109,7 @@ contract('Crucible - setGoal', async (accounts) => {
     ), EVMRevert);
   });
 
-  it('setGoal state must be LOCKED', async () => {
+  it('setGoal state must be LOCKED or JUDGEMENT state', async () => {
     await expectThrow(crucible.setGoal.sendTransaction(
       address.user1, true, { 'from': address.oracle }
     ), EVMRevert);
@@ -88,7 +128,7 @@ contract('Crucible - setGoal', async (accounts) => {
     );
 
     await expectThrow(crucible.setGoal.sendTransaction(
-      address.user3, true, { 'from': address.oracle }
+      address.owner, true, { 'from': address.oracle }
     ), EVMRevert);
   });
 

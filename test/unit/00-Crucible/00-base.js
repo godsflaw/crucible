@@ -145,4 +145,32 @@ contract('Crucible - base', async (accounts) => {
     assert.equal(released.toNumber(), 0, 'released is 0');
   });
 
+  it('payable function works', async () => {
+    var balance = await web3.eth.getBalance(crucible.address);
+    assert.equal(balance.toNumber(), 0, 'balance is 0');
+
+    var tx = await web3.eth.sendTransaction({
+      from: address.owner,
+      to: crucible.address,
+      value: cu.tooLowAmountWei,
+    });
+
+    balance = await web3.eth.getBalance(crucible.address);
+    assert.equal( balance.toNumber(), cu.tooLowAmountWei, 'balance is .01 ETH');
+  });
+
+  it('payable function emits event', async () => {
+    var tx = await web3.eth.sendTransaction({
+      from: address.owner,
+      to: crucible.address,
+      value: cu.tooLowAmountWei,
+    });
+
+    var result = await truffleAssert.createTransactionResult(crucible, tx);
+    truffleAssert.eventEmitted(result, 'FundsReceived', (ev) => {
+      return ev.fromAddress === address.owner &&
+        ev.amount.toNumber() === cu.tooLowAmountWei.toNumber();
+    }, 'event fired and fromAddress and amount are correct');
+  });
+
 });

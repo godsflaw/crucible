@@ -6,7 +6,7 @@ const truffleAssert = require('truffle-assertions');
 
 const Crucible = artifacts.require("./Crucible.sol");
 
-contract('Crucible - finish', async (accounts) => {
+contract('Crucible - judgement', async (accounts) => {
   let cu;
   let address;
   let crucible;
@@ -33,62 +33,61 @@ contract('Crucible - finish', async (accounts) => {
     await crucible.kill({ from: address.oracle });
   });
 
-  it('finish changes crucible state to FINISHED', async () => {
+  it('judgement changes crucible state to JUDGEMENT', async () => {
     await cu.sleep(2000);
     var tx = await crucible.lock.sendTransaction({ 'from': address.oracle });
 
     var state = await crucible.state.call();
     assert(cu.crucibleStateIsLocked(state), 'crucible is in the LOCKED state');
     await cu.sleep(2000);
-    tx = await crucible.finish.sendTransaction({ 'from': address.oracle });
+    tx = await crucible.judgement.sendTransaction({ 'from': address.oracle });
     state = await crucible.state.call();
-    assert(cu.crucibleStateIsFinished(state), 'crucible is in the FINISHED state');
+    assert(
+      cu.crucibleStateIsJudgement(state), 'crucible is in the JUDGEMENT state'
+    );
   });
 
-  it('finish exits clean if already in the FINISHED state', async () => {
+  it('judgement emits state change event', async () => {
     await cu.sleep(2000);
     var tx = await crucible.lock.sendTransaction({ 'from': address.oracle });
-
-    var state = await crucible.state.call();
-    assert(cu.crucibleStateIsLocked(state), 'crucible is in the LOCKED state');
     await cu.sleep(2000);
-    tx = await crucible.finish.sendTransaction({ 'from': address.oracle });
-    state = await crucible.state.call();
-    assert(cu.crucibleStateIsFinished(state), 'crucible is in the FINISHED state');
-    await cu.sleep(1000);
-    tx = await crucible.finish.sendTransaction({ 'from': address.oracle });
-    state = await crucible.state.call();
-    assert(cu.crucibleStateIsFinished(state), 'crucible is in the FINISHED state');
+
+    tx = await crucible.judgement({ 'from': address.oracle });
+    truffleAssert.eventEmitted(tx, 'CrucibleStateChange', (ev) => {
+      return cu.crucibleStateIsLocked(ev.fromState) &&
+        cu.crucibleStateIsJudgement(ev.toState);
+    }, 'fromState and toState are correct');
   });
 
-  it('only oracle can change crucible state to FINISHED', async () => {
+  it('only oracle can change crucible state to JUDGEMENT', async () => {
     await cu.sleep(2000);
     var tx = await crucible.lock.sendTransaction({ 'from': address.oracle });
+
     var state = await crucible.state.call();
     assert(cu.crucibleStateIsLocked(state), 'crucible is in the LOCKED state');
     await cu.sleep(2000);
 
-    await expectThrow(crucible.finish.sendTransaction(
+    await expectThrow(crucible.judgement.sendTransaction(
       { 'from': address.user1 }
     ), EVMRevert);
   });
 
-  it('finish only changes state if we are past endDate', async () => {
+  it('judgement only changes state if we are past endDate', async () => {
     await cu.sleep(2000);
     var tx = await crucible.lock.sendTransaction({ 'from': address.oracle });
     var state = await crucible.state.call();
     assert(cu.crucibleStateIsLocked(state), 'crucible is in the LOCKED state');
 
-    await expectThrow(crucible.finish.sendTransaction(
+    await expectThrow(crucible.judgement.sendTransaction(
       { 'from': address.oracle }
     ), EVMRevert);
   });
 
-  it('finish only changes state from LOCKED to FINISHED', async () => {
+  it('judgement only changes state from LOCKED to JUDGEMENT', async () => {
     var state = await crucible.state.call();
     assert(cu.crucibleStateIsOpen(state), 'crucible is in the OPEN state');
 
-    await expectThrow(crucible.finish.sendTransaction(
+    await expectThrow(crucible.judgement.sendTransaction(
       { 'from': address.oracle }
     ), EVMRevert);
   });

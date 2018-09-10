@@ -4,8 +4,20 @@ const Web3 = require('web3');
 const BigNumber = web3.BigNumber;
 const Address = require('./address');
 
-var GoalState = Object.freeze({ 'WAITING':1, 'PASS':2, 'FAIL':3 })
-var CrucibleState = Object.freeze({ 'OPEN':1, 'LOCKED':2, 'FINISHED':3 })
+var GoalState = Object.freeze({
+  'WAITING':1,
+  'PASS':2,
+  'FAIL':3,
+});
+
+var CrucibleState = Object.freeze({
+  'OPEN':1,
+  'LOCKED':2,
+  'JUDGEMENT':3,
+  'FINISHED':4,
+  'PAID':5,
+  'BROKEN':6,
+});
 
 function CrucibleUtils(options) {
   if (false === (this instanceof CrucibleUtils)) {
@@ -127,10 +139,16 @@ CrucibleUtils.prototype.getCrucibleState = function (_state) {
       state = CrucibleState.LOCKED;
       break;
     case 2:
-      state = CrucibleState.FINISHED;
+      state = CrucibleState.JUDGEMENT;
       break;
     case 3:
+      state = CrucibleState.FINISHED;
+      break;
+    case 4:
       state = CrucibleState.PAID;
+      break;
+    case 5:
+      state = CrucibleState.BROKEN;
       break;
     default:
       state = CrucibleState.OPEN;
@@ -155,6 +173,14 @@ CrucibleUtils.prototype.crucibleStateIsLocked = function (state) {
   return false;
 }
 
+CrucibleUtils.prototype.crucibleStateIsJudgement = function (state) {
+  if (this.getCrucibleState(state) === CrucibleState.JUDGEMENT) {
+    return true;
+  }
+
+  return false;
+}
+
 CrucibleUtils.prototype.crucibleStateIsFinished = function (state) {
   if (this.getCrucibleState(state) === CrucibleState.FINISHED) {
     return true;
@@ -165,6 +191,14 @@ CrucibleUtils.prototype.crucibleStateIsFinished = function (state) {
 
 CrucibleUtils.prototype.crucibleStateIsPaid = function (state) {
   if (this.getCrucibleState(state) === CrucibleState.PAID) {
+    return true;
+  }
+
+  return false;
+}
+
+CrucibleUtils.prototype.crucibleStateIsBroken = function (state) {
+  if (this.getCrucibleState(state) === CrucibleState.BROKEN) {
     return true;
   }
 

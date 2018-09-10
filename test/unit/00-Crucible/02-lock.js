@@ -42,6 +42,15 @@ contract('Crucible - lock', async (accounts) => {
     assert(cu.crucibleStateIsLocked(state), 'crucible is in the LOCKED state');
   });
 
+  it('lock emits state change event', async () => {
+    await cu.sleep(2000);
+    var tx = await crucible.lock({ 'from': address.oracle });
+    truffleAssert.eventEmitted(tx, 'CrucibleStateChange', (ev) => {
+      return cu.crucibleStateIsOpen(ev.fromState) &&
+        cu.crucibleStateIsLocked(ev.toState);
+    }, 'fromState and toState are correct');
+  });
+
   it('anyone can change crucible state to LOCKED', async () => {
     var state = await crucible.state.call();
     assert(cu.crucibleStateIsOpen(state), 'crucible is in the OPEN state');
