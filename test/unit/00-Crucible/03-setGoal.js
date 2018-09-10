@@ -97,7 +97,7 @@ contract('Crucible - setGoal', async (accounts) => {
       return ev.participant === address.user2 &&
         cu.goalStateIsWaiting(ev.fromState) &&
         cu.goalStateIsFail(ev.toState);
-    }, 'fromState and toState are correct');
+    }, 'participant, fromState, and toState are correct');
 
   });
 

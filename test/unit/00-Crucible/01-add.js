@@ -49,6 +49,24 @@ contract('Crucible - add', async (accounts) => {
     );
   });
 
+  it('FundsReceived emitted on add', async () => {
+    var tx = await cu.add(crucible, 'user1');
+
+    var result = await truffleAssert.createTransactionResult(
+      crucible, tx.transactionHash
+    );
+    truffleAssert.eventEmitted(result, 'FundsReceived', (ev) => {
+      return ev.fromAddress === address.user1 &&
+        ev.amount.toNumber() === cu.riskAmounttWei.toNumber();
+    }, 'event fired and fromAddress and amount are correct');
+
+    assert.deepEqual(
+      await web3.eth.getBalance(crucible.address),
+      cu.riskAmounttWei,
+      'contract balance is as expected'
+    );
+  });
+
   it('owner can add participant', async () => {
     var tx = await cu.addBySender(crucible, 'oracle', 'user1');
 
