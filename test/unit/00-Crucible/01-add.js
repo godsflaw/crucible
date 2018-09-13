@@ -38,13 +38,13 @@ contract('Crucible - add', async (accounts) => {
 
     var commitment = await crucible.commitments.call(participant);
     assert.equal(commitment[0], true, 'record exists');
-    assert.equal(commitment[1].toNumber(), cu.riskAmounttWei, 'risk correct');
+    assert.equal(commitment[1].toNumber(), cu.riskAmountWei, 'risk correct');
     assert.equal(
       cu.goalStateIsWaiting(commitment[2]), true, 'goal in waiting state'
     );
     assert.deepEqual(
       await web3.eth.getBalance(crucible.address),
-      cu.riskAmounttWei,
+      cu.riskAmountWei,
       'contract balance is as expected'
     );
   });
@@ -57,12 +57,12 @@ contract('Crucible - add', async (accounts) => {
     );
     truffleAssert.eventEmitted(result, 'FundsReceived', (ev) => {
       return ev.fromAddress === address.user1 &&
-        ev.amount.toNumber() === cu.riskAmounttWei.toNumber();
+        ev.amount.toNumber() === cu.riskAmountWei.toNumber();
     }, 'event fired and fromAddress and amount are correct');
 
     assert.deepEqual(
       await web3.eth.getBalance(crucible.address),
-      cu.riskAmounttWei,
+      cu.riskAmountWei,
       'contract balance is as expected'
     );
   });
@@ -75,13 +75,13 @@ contract('Crucible - add', async (accounts) => {
 
     var commitment = await crucible.commitments.call(participant);
     assert.equal(commitment[0], true, 'record exists');
-    assert.equal(commitment[1].toNumber(), cu.riskAmounttWei, 'risk correct');
+    assert.equal(commitment[1].toNumber(), cu.riskAmountWei, 'risk correct');
     assert.equal(
       cu.goalStateIsWaiting(commitment[2]), true, 'goal in waiting state'
     );
     assert.deepEqual(
       await web3.eth.getBalance(crucible.address),
-      cu.riskAmounttWei,
+      cu.riskAmountWei,
       'contract balance is as expected'
     );
   });
@@ -97,11 +97,11 @@ contract('Crucible - add', async (accounts) => {
 
       var commitment = await crucible.commitments.call(participant);
       assert.equal(commitment[0], true, 'record exists');
-      assert.equal(commitment[1].toNumber(), cu.riskAmounttWei, 'risk correct');
+      assert.equal(commitment[1].toNumber(), cu.riskAmountWei, 'risk correct');
       assert.equal(
         cu.goalStateIsWaiting(commitment[2]), true, 'goal in waiting state'
       );
-      balance = balance.plus(cu.riskAmounttWei);
+      balance = balance.plus(cu.riskAmountWei);
       assert.deepEqual(
         await web3.eth.getBalance(crucible.address),
         balance,

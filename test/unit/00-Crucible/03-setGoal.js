@@ -44,7 +44,7 @@ contract('Crucible - setGoal', async (accounts) => {
 
     var commitment = await crucible.commitments.call(address.user1);
     assert.equal(commitment[0], true, 'record exists');
-    assert.equal(commitment[1].toNumber(), cu.riskAmounttWei, 'risk correct');
+    assert.equal(commitment[1].toNumber(), cu.riskAmountWei, 'risk correct');
     assert.equal(
       cu.goalStateIsPass(commitment[2]), true, 'goal in pass state'
     );
@@ -55,7 +55,7 @@ contract('Crucible - setGoal', async (accounts) => {
 
     commitment = await crucible.commitments.call(address.user2);
     assert.equal(commitment[0], true, 'record exists');
-    assert.equal(commitment[1].toNumber(), cu.riskAmounttWei, 'risk correct');
+    assert.equal(commitment[1].toNumber(), cu.riskAmountWei, 'risk correct');
     assert.equal(
       cu.goalStateIsFail(commitment[2]), true, 'goal in fail state'
     );
@@ -68,7 +68,7 @@ contract('Crucible - setGoal', async (accounts) => {
 
     var commitment = await crucible.commitments.call(address.user3);
     assert.equal(commitment[0], true, 'record exists');
-    assert.equal(commitment[1].toNumber(), cu.riskAmounttWei, 'risk correct');
+    assert.equal(commitment[1].toNumber(), cu.riskAmountWei, 'risk correct');
     assert.equal(
       cu.goalStateIsPass(commitment[2]), true, 'goal in pass state'
     );

@@ -63,6 +63,21 @@ contract('Crucible - base', async (accounts) => {
     assert.equal(name, 'test', 'name = test expected');
   });
 
+  it('verify processedWaiting is set', async () => {
+    var processedWaiting = await crucible.processedWaiting.call();
+    assert.equal(processedWaiting, false, 'processedWaiting is false');
+  });
+
+  it('verify processedFailed is set', async () => {
+    var processedFailed = await crucible.processedFailed.call();
+    assert.equal(processedFailed, false, 'processedFailed is false');
+  });
+
+  it('verify processedFeePayout is set', async () => {
+    var processedFeePayout = await crucible.processedFeePayout.call();
+    assert.equal(processedFeePayout, false, 'processedFeePayout is false');
+  });
+
   it('verify the startDate is set', async () => {
     var _startDate = await crucible.startDate.call();
     assert.equal(_startDate.toNumber(), startDate, 'startDate is as expected');

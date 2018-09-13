@@ -3,6 +3,8 @@
 const Web3 = require('web3');
 const BigNumber = web3.BigNumber;
 const Address = require('./address');
+const assert = require('chai').assert
+const truffleAssert = require('truffle-assertions');
 
 var GoalState = Object.freeze({
   'WAITING':1,
@@ -27,6 +29,7 @@ function CrucibleUtils(options) {
   options = options || {};
 
   this.address = options.address || new Address();
+  this.gasPrice = options.gasPrice || 100000000000;
 
   this.zeroAmountEth = new BigNumber(0);
   this.zeroAmountWei = web3.toWei(this.zeroAmountEth, "ether");
@@ -38,19 +41,20 @@ function CrucibleUtils(options) {
   this.minAmountWei = web3.toWei(this.minAmountEth, "ether");
 
   this.riskAmountEth = new BigNumber(0.5);
-  this.riskAmounttWei = web3.toWei(this.riskAmountEth, "ether");
+  this.riskAmountWei = web3.toWei(this.riskAmountEth, "ether");
 }
 
 CrucibleUtils.prototype.sleep = require('util').promisify(setTimeout);
 
 CrucibleUtils.prototype.addBySender = async function (crucible, sender, participant, _amount) {
-  var amount = (_amount === undefined) ? this.riskAmounttWei : _amount;
+  var amount = (_amount === undefined) ? this.riskAmountWei : _amount;
   return await web3.eth.getTransactionReceipt(
     await crucible.add.sendTransaction(
       this.address[participant],
       {
         'from': this.address[sender],
-        'value': amount
+        'value': amount,
+        'gasPrice': this.gasPrice,
       }
     )
   );
@@ -113,7 +117,7 @@ CrucibleUtils.prototype.goalStateIsWaiting = function (state) {
   }
 
   return false;
-}
+};
 
 CrucibleUtils.prototype.goalStateIsPass = function (state) {
   if (this.getGoalState(state) === GoalState.PASS) {
@@ -121,7 +125,7 @@ CrucibleUtils.prototype.goalStateIsPass = function (state) {
   }
 
   return false;
-}
+};
 
 CrucibleUtils.prototype.goalStateIsFail = function (state) {
   if (this.getGoalState(state) === GoalState.FAIL) {
@@ -129,7 +133,7 @@ CrucibleUtils.prototype.goalStateIsFail = function (state) {
   }
 
   return false;
-}
+};
 
 CrucibleUtils.prototype.getCrucibleState = function (_state) {
   var state;
@@ -163,7 +167,7 @@ CrucibleUtils.prototype.crucibleStateIsOpen = function (state) {
   }
 
   return false;
-}
+};
 
 CrucibleUtils.prototype.crucibleStateIsLocked = function (state) {
   if (this.getCrucibleState(state) === CrucibleState.LOCKED) {
@@ -171,7 +175,7 @@ CrucibleUtils.prototype.crucibleStateIsLocked = function (state) {
   }
 
   return false;
-}
+};
 
 CrucibleUtils.prototype.crucibleStateIsJudgement = function (state) {
   if (this.getCrucibleState(state) === CrucibleState.JUDGEMENT) {
@@ -179,7 +183,7 @@ CrucibleUtils.prototype.crucibleStateIsJudgement = function (state) {
   }
 
   return false;
-}
+};
 
 CrucibleUtils.prototype.crucibleStateIsFinished = function (state) {
   if (this.getCrucibleState(state) === CrucibleState.FINISHED) {
@@ -187,7 +191,7 @@ CrucibleUtils.prototype.crucibleStateIsFinished = function (state) {
   }
 
   return false;
-}
+};
 
 CrucibleUtils.prototype.crucibleStateIsPaid = function (state) {
   if (this.getCrucibleState(state) === CrucibleState.PAID) {
@@ -195,7 +199,7 @@ CrucibleUtils.prototype.crucibleStateIsPaid = function (state) {
   }
 
   return false;
-}
+};
 
 CrucibleUtils.prototype.crucibleStateIsBroken = function (state) {
   if (this.getCrucibleState(state) === CrucibleState.BROKEN) {
@@ -203,6 +207,97 @@ CrucibleUtils.prototype.crucibleStateIsBroken = function (state) {
   }
 
   return false;
+};
+
+CrucibleUtils.prototype.gasCost = function (tx) {
+  return (this.gasPrice * tx.gasUsed);
+};
+
+CrucibleUtils.prototype.assertStartBalances =
+  async function (crucible, risk, startBalances, addTx) {
+
+  var balance;
+  var commitment;
+
+  // make sure the contract balance increases by the risked amount
+  balance = await web3.eth.getBalance(crucible.address);
+  assert.equal(
+    balance.toNumber(),
+    risk.times(3),
+    'crucible contract balance is correct'
+  );
+
+  for (var i = 1; i <= 3; i++) {
+    // make sure the commitment has the correct balance
+    commitment = await crucible.commitments.call(this.address['user' + i]);
+    assert.equal(
+      commitment[1].toNumber(),
+      risk,
+      'user' + i + ': risk correct'
+    );
+
+    // make sure the each participant's balance dropped by their risk + gas
+    this.assertUserWalletBalance(
+      'user' + i,
+      startBalances['user' + i]
+        .minus(this.gasCost(addTx['user' + i]))
+        .minus(risk)
+        .toNumber(),
+    );
+//    balance = await web3.eth.getBalance(this.address['user' + i]);
+//    assert.equal(
+//      balance.toNumber(),
+//      startBalances['user' + i]
+//        .minus(this.gasCost(addTx['user' + i]))
+//        .minus(risk)
+//        .toNumber(),
+//      'user' + i + ': start balance correct'
+//    );
+  }
+};
+
+CrucibleUtils.prototype.assertBalanceZero = async function (crucible) {
+  for (var i = 1; i <= 3; i++) {
+    var commitment = await crucible.commitments.call(this.address['user' + i]);
+    assert.equal(commitment[1].toNumber(), 0, 'user' + i + ': zero balance');
+  }
+
+  var balance = await web3.eth.getBalance(crucible.address);
+  assert.equal(balance.toNumber(), 0, 'crucible balance is 0');
+};
+
+CrucibleUtils.prototype.assertCrucibleState =
+  async function (crucible, evdata, eventName, fromTest, toTest) {
+
+  var self = this;
+
+  // test that we got the event
+  truffleAssert.eventEmitted(evdata, eventName, (ev) => {
+    return fromTest.call(self, ev.fromState) && toTest.call(self, ev.toState);
+  }, 'got CrucibleStateChange: fromState and toState are correct');
+
+  // test that the state is in toTest
+  var state = await crucible.state.call();
+  assert(toTest.call(self, state), 'crucible is in the correct state');
+};
+
+CrucibleUtils.prototype.assertUserWalletBalance =
+  async function (user, expectedBalance) {
+
+  var balance = await web3.eth.getBalance(this.address[user]);
+  assert.equal(
+    balance.toNumber(),
+    expectedBalance,
+    user + ': balance correct'
+  );
 }
+
+CrucibleUtils.prototype.assertEventSent =
+  async function (evdata, eventName, addr, amount) {
+
+  truffleAssert.eventEmitted(evdata, eventName, (ev) => {
+    return ev.recipient === addr && ev.amount.eq(amount);
+  }, 'got ' + eventName + ' event with correct recipient and amount');
+};
 
 module.exports = CrucibleUtils;

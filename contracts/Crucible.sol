@@ -8,17 +8,20 @@ contract Crucible is Ownable {
   using SafeMath for uint256;
 
   string public name;
-  bool public processedWaiting = false;   // TODO(godsflaw): test in constructor
-  bool public processedFailed = false;    // TODO(godsflaw): test in constructor
-  bool public processedFeePayout = false; // TODO(godsflaw): test in constructor
+  bool public processedWaiting = false;
+  bool public processedFailed = false;
+  bool public processedFeePayout = false;
   uint public startDate;
   uint public lockDate;
   uint public endDate;
   uint public timeout = 2419200;          // TODO(godsflaw): put in constructor
   uint256 public minimumAmount;
+  uint256 public failedCount = 0;         // TODO(godsflaw): test in constructor
   uint256 public penalty = 0;
+  uint256 public fee = 0;
   uint256 public released = 0;
-  uint256 public feeNumerator = 100;      // TODO(godsflaw): put in constructor
+  uint256 public reserve = 0;             // TODO(godsflaw): test in constructor
+  uint256 public feeNumerator = 500;      // TODO(godsflaw): put in constructor
   uint256 public feeDenominator = 1000;   // TODO(godsflaw): put in constructor
   CrucibleState public state = CrucibleState.OPEN;
 
@@ -47,6 +50,10 @@ contract Crucible is Ownable {
     GoalState metGoal;
   }
 
+  // event Debug(string msg, uint256 data);
+  event FeeSent(address recipient, uint256 amount);
+  event PaymentSent(address recipient, uint256 amount);
+  event RefundSent(address recipient, uint256 amount);
   event FundsReceived(address fromAddress, uint256 amount);
   event CrucibleStateChange(CrucibleState fromState, CrucibleState toState);
   event CommitmentStateChange(
@@ -113,6 +120,22 @@ contract Crucible is Ownable {
   }
 
   // TODO(godsflaw): test this
+  function _processWaiting() internal {
+    if (processedWaiting) {
+      return;
+    }
+
+    for (uint i = 0; i < participants.length; i++) {
+      address participant = participants[i];
+      if (commitments[participant].metGoal == GoalState.WAITING) {
+        reserve = reserve.add(commitments[participant].amount);
+      }
+    }
+
+    processedWaiting = true;
+  }
+
+  // TODO(godsflaw): test this
   function _processFailed() internal {
     if (processedFailed) {
       return;
@@ -122,10 +145,9 @@ contract Crucible is Ownable {
       address participant = participants[i];
 
       // calculate penalty by taking the risked amount from those that failed
-      if (commitments[participant].amount > 0 &&
-          commitments[participant].metGoal == GoalState.FAIL) {
-        commitments[participant].amount = 0;
+      if (commitments[participant].metGoal == GoalState.FAIL) {
         penalty = penalty.add(commitments[participant].amount);
+        commitments[participant].amount = 0;
       }
     }
 
@@ -140,17 +162,36 @@ contract Crucible is Ownable {
       return;
     }
 
-    uint256 payment = penalty.mul(feeNumerator).div(feeDenominator);
-    penalty = penalty.sub(payment);
-
-    if (payment == 0 || owner.send(payment)) {
-      processedFeePayout = true;
+    // if we have participants and all failed, then fee is the entire balance
+    if (failedCount == participants.length) {
+      fee = address(this).balance;
+    } else {
+      fee = penalty.mul(feeNumerator).div(feeDenominator);
     }
+
+    if (fee == 0) {
+      processedFeePayout = true;
+      return;
+    }
+
+    penalty = penalty.sub(fee);
+
+    // We take one shot at sending the owner/oracle their fee, if it fails
+    // the fee will sit in reserves.  Once the crucible is in the PAID state
+    // it can be killed, and those reserve funds will go to the owner.
+    if (owner.send(fee)) {
+      released = released.add(fee);
+      emit FeeSent(owner, fee);
+    } else {
+      reserve = reserve.add(fee);
+    }
+
+    processedFeePayout = true;
   }
 
   // TODO(godsflaw): test this
   function _processPayouts(uint _startIndex, uint _records) internal {
-    require(processedFailed, "_processFailed() must complete first");
+    require(processedWaiting, "_processWaiting() must complete first");
     require(processedFeePayout, "_processedFeePayout() must complete first");
 
     // bound check and normalize _start
@@ -167,11 +208,12 @@ contract Crucible is Ownable {
       address participant = participants[i];
 
       // try to reward everyone that passed the crucible
-      if (commitments[participant].amount > 0 ) {
-        if (commitments[participant].metGoal == GoalState.PASS ||
-            commitments[participant].metGoal == GoalState.WAITING) {
-
-          uint256 totalFunds = address(this).balance.add(released);
+      if (commitments[participant].amount > 0) {
+        if (commitments[participant].metGoal == GoalState.PASS) {
+          uint256 totalFunds = address(this).balance
+            .add(released)
+            .sub(reserve)
+            .sub(fee.add(penalty));
 
           uint256 bonus = penalty
             .mul(commitments[participant].amount)
@@ -182,8 +224,27 @@ contract Crucible is Ownable {
           if (participant.send(payment)) {
             released = released.add(payment);
             commitments[participant].amount = 0;
+            emit PaymentSent(participant, payment);
           }
-
+        } else if (commitments[participant].metGoal == GoalState.WAITING) {
+          // Refund all WAITING commitments since we never got a PASS/FAIL.  This
+          // is because the oracle likely never reported on the commitment.  Either
+          // the oralce knows about it and didn't report, or the participant added
+          // themselves in such a way that the oracle doesn't know about them.  In the
+          // former case we should not FAIL the commitment, after all the participant
+          // may have done the work.  However, if we assume that and default to PASS
+          // an attacker could add a ton of commitments that the oracle doesn't know
+          // about, get a default PASS, and then share in the profits while doing
+          // none of the work.  If the oracle has not marked the commitment PASS or
+          // FAIL at this point, we should make no assumptions and just refund the
+          // participant.  If the participant is honest and did the work, they could
+          // hope for their risked commitment back at least, and if the participant
+          // is an attacker, they simply won't be counted in the total.
+          if (participant.send(commitments[participant].amount)) {
+            reserve.sub(commitments[participant].amount);
+            emit RefundSent(participant, commitments[participant].amount);
+            commitments[participant].amount = 0;
+          }
         }
       }
     }
@@ -228,7 +289,6 @@ contract Crucible is Ownable {
     });
     participants.push(_participant);
 
-    // TODO(godsflaw): test this
     emit FundsReceived(_participant, msg.value);
   }
 
@@ -246,6 +306,7 @@ contract Crucible is Ownable {
       commitments[_participant].metGoal = GoalState.PASS;
     } else {
       commitments[_participant].metGoal = GoalState.FAIL;
+      failedCount++;
     }
 
     emit CommitmentStateChange(
@@ -256,7 +317,7 @@ contract Crucible is Ownable {
   // TODO(godsflaw): test this
   function broken() public {
     require(
-      endDate <= (now + timeout),
+      (endDate + timeout) <= now,
       'can only moved to BROKEN state timeout past endDate'
     );
 
@@ -292,28 +353,14 @@ contract Crucible is Ownable {
       'state can only move JUDGEMENT -> FINISHED'
     );
 
-    // Set all WAITING commitments to PASS.  This solves the problem of an
-    // oracle not setting the state for a participant.  If the oracle does not
-    // set the state, we will not penalize the participant.  That is, by default
-    // if one has made it trough the judgement state and still has no PASS/FAIL
-    // status, the contract will assume the participant passed.  This also means
-    // oracles need only concern themselves with setting the goal status of
-    // participants that failed the crucible.
-    for (uint i = 0; i < participants.length; i++) {
-      address participant = participants[i];
-      if (commitments[participant].metGoal == GoalState.WAITING) {
-        setGoal(participant, true);
-      }
-    }
-
     state = CrucibleState.FINISHED;
     emit CrucibleStateChange(CrucibleState.JUDGEMENT, CrucibleState.FINISHED);
   }
 
   // TODO(godsflaw): test this
   // payout() will process as many records in participants[] as specified and
-  // refund or payout that many records.  This method may be called many times,
-  // and will eventually move the crucible to the PAID state.
+  // payout that many records.  This method may be called many times, and will
+  // eventually move the crucible to the PAID state.
   function payout(uint _startIndex, uint _records) public {
     require(
       state == CrucibleState.FINISHED, 'can only payout if in FINISHED state'
@@ -322,6 +369,7 @@ contract Crucible is Ownable {
 
     // The following functions only ever run once, but must run over the entire
     // set of commitments so we have the correct values for payouts.
+    _processWaiting();
     _processFailed();
     _processFeePayout();
 

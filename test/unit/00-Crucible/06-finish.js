@@ -85,49 +85,4 @@ contract('Crucible - finish', async (accounts) => {
     ), EVMRevert);
   });
 
-  it('finish moves waiting users to PASS', async () => {
-    var commitment = await crucible.commitments.call(address.user1);
-    assert.equal(commitment[0], true, 'record exists');
-    assert.equal(
-      cu.goalStateIsPass(commitment[2]), true, 'goal in pass state'
-    );
-
-    commitment = await crucible.commitments.call(address.user2);
-    assert.equal(commitment[0], true, 'record exists');
-    assert.equal(
-      cu.goalStateIsFail(commitment[2]), true, 'goal in fail state'
-    );
-
-    commitment = await crucible.commitments.call(address.user3);
-    assert.equal(commitment[0], true, 'record exists');
-    assert.equal(
-      cu.goalStateIsWaiting(commitment[2]), true, 'goal in waiting state'
-    );
-
-    var tx = await crucible.finish.sendTransaction({ 'from': address.oracle });
-    var state = await crucible.state.call();
-    assert(
-      cu.crucibleStateIsFinished(state), 'crucible is in the FINISHED state'
-    );
-
-    commitment = await crucible.commitments.call(address.user1);
-    assert.equal(commitment[0], true, 'record exists');
-    assert.equal(
-      cu.goalStateIsPass(commitment[2]), true, 'goal in pass state'
-    );
-
-    commitment = await crucible.commitments.call(address.user2);
-    assert.equal(commitment[0], true, 'record exists');
-    assert.equal(
-      cu.goalStateIsFail(commitment[2]), true, 'goal in fail state'
-    );
-
-    commitment = await crucible.commitments.call(address.user3);
-    assert.equal(commitment[0], true, 'record exists');
-    assert.equal(
-      cu.goalStateIsPass(commitment[2]), true, 'goal in pass state'
-    );
-
-  });
-
 });
