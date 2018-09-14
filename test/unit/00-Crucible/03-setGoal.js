@@ -55,7 +55,7 @@ contract('Crucible - setGoal', async (accounts) => {
 
     commitment = await crucible.commitments.call(address.user2);
     assert.equal(commitment[0], true, 'record exists');
-    assert.equal(commitment[1].toNumber(), cu.riskAmountWei, 'risk correct');
+    assert.equal(commitment[1].toNumber(), 0, 'risk zeroed out');
     assert.equal(
       cu.goalStateIsFail(commitment[2]), true, 'goal in fail state'
     );
@@ -72,7 +72,6 @@ contract('Crucible - setGoal', async (accounts) => {
     assert.equal(
       cu.goalStateIsPass(commitment[2]), true, 'goal in pass state'
     );
-
   });
 
   it('setGoal emits CommitmentStateChange', async () => {
@@ -98,7 +97,58 @@ contract('Crucible - setGoal', async (accounts) => {
         cu.goalStateIsWaiting(ev.fromState) &&
         cu.goalStateIsFail(ev.toState);
     }, 'participant, fromState, and toState are correct');
+  });
 
+  it('setGoal FAIL increases the failedCount', async () => {
+    await cu.sleep(1000);
+    var tx = await crucible.lock.sendTransaction({ 'from': address.oracle });
+
+    var failedCount = await crucible.failedCount();
+    assert.equal(failedCount.toNumber(), 0, 'failedCount is 0');
+
+    tx = await crucible.setGoal(
+      address.user1, false, { 'from': address.oracle }
+    );
+
+    failedCount = await crucible.failedCount();
+    assert.equal(failedCount.toNumber(), 1, 'failedCount increased');
+
+    tx = await crucible.setGoal(
+      address.user2, false, { 'from': address.oracle }
+    );
+
+    failedCount = await crucible.failedCount();
+    assert.equal(failedCount.toNumber(), 2, 'failedCount increased');
+  });
+
+  it('setGoal FAIL increases the penalty', async () => {
+    await cu.sleep(1000);
+    var tx = await crucible.lock.sendTransaction({ 'from': address.oracle });
+
+    var penalty = await crucible.penalty();
+    assert.equal(penalty.toNumber(), 0, 'penalty is 0');
+
+    tx = await crucible.setGoal(
+      address.user1, false, { 'from': address.oracle }
+    );
+
+    penalty = await crucible.penalty();
+    assert.equal(
+      penalty.toNumber(),
+      cu.riskAmountWei.toNumber(),
+      'penalty increased'
+    );
+
+    tx = await crucible.setGoal(
+      address.user2, false, { 'from': address.oracle }
+    );
+
+    penalty = await crucible.penalty();
+    assert.equal(
+      penalty.toNumber(),
+      cu.riskAmountWei.times(2).toNumber(),
+      'penalty increased'
+    );
   });
 
   it('setGoal throws error if we are not the owner', async () => {

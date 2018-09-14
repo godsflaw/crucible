@@ -343,6 +343,10 @@ contract('Crucible - payout', async (accounts) => {
         ).toNumber()
     );
 
+    // events NOT emitted
+    truffleAssert.eventNotEmitted(evdata, 'RefundSent');
+    truffleAssert.eventNotEmitted(evdata, 'CrucibleStateChange');
+
     // trigger partial payout
     tx = await crucible.payout.sendTransaction(
       1, 1, { 'from': address.oracle }
@@ -358,6 +362,12 @@ contract('Crucible - payout', async (accounts) => {
         .toNumber()
     );
 
+    // events NOT emitted
+    truffleAssert.eventNotEmitted(evdata, 'FeeSent');
+    truffleAssert.eventNotEmitted(evdata, 'PaymentSent');
+    truffleAssert.eventNotEmitted(evdata, 'RefundSent');
+    truffleAssert.eventNotEmitted(evdata, 'CrucibleStateChange');
+
     // trigger partial payout
     tx = await crucible.payout.sendTransaction(
       2, 1, { 'from': address.oracle }
@@ -370,6 +380,10 @@ contract('Crucible - payout', async (accounts) => {
       'user3',
       startBalances['user3'].minus(cu.gasCost(addTx['user3'])).toNumber()
     );
+
+    // events NOT emitted
+    truffleAssert.eventNotEmitted(evdata, 'PaymentSent');
+    truffleAssert.eventNotEmitted(evdata, 'FeeSent');
 
     // balances after payout
     await cu.assertBalanceZero(crucible);
@@ -455,6 +469,12 @@ contract('Crucible - payout', async (accounts) => {
       crucible, cu.riskAmountWei, startBalances, addTx
     );
 
+    var processedWaiting = await crucible.processedWaiting();
+    assert.equal(processedWaiting, false, '_processWaiting() not run yet');
+
+    var reserve = await crucible.reserve();
+    assert.equal(reserve.toNumber(), 0, 'reserve is 0');
+
     var evdata;
     for (var i = 0; i < 3; i++) {
       // trigger payout
@@ -469,6 +489,14 @@ contract('Crucible - payout', async (accounts) => {
       // events NOT emitted
       truffleAssert.eventNotEmitted(evdata, 'FeeSent');
       truffleAssert.eventNotEmitted(evdata, 'PaymentSent');
+
+      // reserves fall by expected amounts
+      reserve = await crucible.reserve();
+      assert.equal(
+        reserve.toNumber(),
+        cu.riskAmountWei.times(2 - i),
+        'reserve is as expected'
+      );
     }
 
     // balances after payout
@@ -490,6 +518,12 @@ contract('Crucible - payout', async (accounts) => {
       cu.crucibleStateIsFinished,
       cu.crucibleStateIsPaid
     );
+
+    reserve = await crucible.reserve();
+    assert.equal(reserve.toNumber(), 0, 'reserve is 0 again');
+
+    processedWaiting = await crucible.processedWaiting();
+    assert.equal(processedWaiting, true, '_processWaiting() worked');
   });
 
   it('can partial payout with participants all in FAIL state', async () => {
@@ -498,12 +532,25 @@ contract('Crucible - payout', async (accounts) => {
 
     tx = await crucible.judgement.sendTransaction({ 'from': address.oracle });
 
+    var processedFeePayout = await crucible.processedFeePayout();
+    assert.equal(processedFeePayout, false, '_processedFeePayout() not run yet');
+
+    var penalty = await crucible.penalty();
+    assert.equal(penalty.toNumber(), 0, 'penalty = 0');
+
     // set all participants to the FAIL state
     for (var i = 1; i <= 3; i++) {
       tx = await crucible.setGoal.sendTransaction(
         address['user' + i], false, { 'from': address.oracle }
       );
     }
+
+    penalty = await crucible.penalty();
+    assert.equal(
+      penalty.toNumber(),
+      cu.riskAmountWei.times(3).toNumber(),
+      'penalty is as expected'
+    );
 
     tx = await crucible.finish.sendTransaction({ 'from': address.oracle });
 
@@ -555,7 +602,17 @@ contract('Crucible - payout', async (accounts) => {
           cu.crucibleStateIsFinished,
           cu.crucibleStateIsPaid
         );
+
+        // penalty is still where it was, we never
+        penalty = await crucible.penalty();
+        assert.equal(penalty.toNumber(), 0, 'penalty is 0 becasue of max fee');
+
+        processedFeePayout = await crucible.processedFeePayout();
+        assert.equal(processedFeePayout, true, '_processedFeePayout() run');
       } else {
+        processedFeePayout = await crucible.processedFeePayout();
+        assert.equal(processedFeePayout, true, '_processedFeePayout() run');
+
         await expectThrow(crucible.payout.sendTransaction(
           i, 1, { 'from': address.oracle }
         ), EVMRevert);
@@ -563,4 +620,6 @@ contract('Crucible - payout', async (accounts) => {
     }
   });
 
+  // TODO(godsflaw): what happens if we try to pay out to a payable contract
+  // with a payable function that exceeds the maximum gas stipend.
 });

@@ -63,14 +63,19 @@ contract('Crucible - base', async (accounts) => {
     assert.equal(name, 'test', 'name = test expected');
   });
 
+  it('verify failedCount is set', async () => {
+    var failedCount = await crucible.failedCount.call();
+    assert.equal(failedCount, 0, 'processedWaiting is false');
+  });
+
+  it('verify reserve is set', async () => {
+    var reserve = await crucible.reserve.call();
+    assert.equal(reserve, 0, 'processedWaiting is false');
+  });
+
   it('verify processedWaiting is set', async () => {
     var processedWaiting = await crucible.processedWaiting.call();
     assert.equal(processedWaiting, false, 'processedWaiting is false');
-  });
-
-  it('verify processedFailed is set', async () => {
-    var processedFailed = await crucible.processedFailed.call();
-    assert.equal(processedFailed, false, 'processedFailed is false');
   });
 
   it('verify processedFeePayout is set', async () => {

@@ -232,7 +232,7 @@ CrucibleUtils.prototype.assertStartBalances =
     commitment = await crucible.commitments.call(this.address['user' + i]);
     assert.equal(
       commitment[1].toNumber(),
-      risk,
+      this.goalStateIsFail(commitment[2]) ? 0 : risk,
       'user' + i + ': risk correct'
     );
 
