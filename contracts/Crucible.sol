@@ -130,7 +130,6 @@ contract Crucible is Ownable {
     processedWaiting = true;
   }
 
-  // TODO(godsflaw): test this
   function _processFeePayout() internal {
     require(processedWaiting, "_processWaiting() must complete first");
 
@@ -165,7 +164,6 @@ contract Crucible is Ownable {
     processedFeePayout = true;
   }
 
-  // TODO(godsflaw): test this
   function _processPayouts(uint _startIndex, uint _records) internal {
     require(processedFeePayout, "_processedFeePayout() must complete first");
 
