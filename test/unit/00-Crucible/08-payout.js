@@ -82,11 +82,20 @@ contract('Crucible - payout', async (accounts) => {
       crucible, cu.riskAmountWei, startBalances, addTx
     );
 
+    // trigger fee payout
+    tx = await crucible.collectFee.sendTransaction(
+      address.oracle, { 'from': address.oracle }
+    );
+    var evdata = await truffleAssert.createTransactionResult(crucible, tx);
+
+    // The correct fee is was sent to the oracle
+    cu.assertEventSent(evdata, 'FeeSent', address.oracle, fee);
+
     // trigger payout
     tx = await crucible.payout.sendTransaction(
       0, count, { 'from': address.oracle }
     );
-    var evdata = await truffleAssert.createTransactionResult(crucible, tx);
+    evdata = await truffleAssert.createTransactionResult(crucible, tx);
 
     // balances after payout
     await cu.assertBalanceZero(crucible);
@@ -99,7 +108,7 @@ contract('Crucible - payout', async (accounts) => {
     cu.assertUserWalletBalance(
       'user1',
       startBalances['user1']
-        .minus(cu.gasCost(addTx['user1']))
+        .minus(await cu.gasCost(addTx['user1']))
         .plus(
           cu.riskAmountWei.minus(fee)
         ).toNumber()
@@ -109,7 +118,7 @@ contract('Crucible - payout', async (accounts) => {
     cu.assertUserWalletBalance(
       'user2',
       startBalances['user2']
-        .minus(cu.gasCost(addTx['user2']))
+        .minus(await cu.gasCost(addTx['user2']))
         .minus(cu.riskAmountWei)
         .toNumber()
     );
@@ -118,11 +127,8 @@ contract('Crucible - payout', async (accounts) => {
     cu.assertEventSent(evdata, 'RefundSent', address.user3, cu.riskAmountWei);
     cu.assertUserWalletBalance(
       'user3',
-      startBalances['user3'].minus(cu.gasCost(addTx['user3'])).toNumber()
+      startBalances['user3'].minus(await cu.gasCost(addTx['user3'])).toNumber()
     );
-
-    // The correct fee is was sent to the oracle
-    cu.assertEventSent(evdata, 'FeeSent', address.oracle, fee);
 
     // We are in the paid state, and got the event
     await cu.assertCrucibleState(
@@ -159,11 +165,20 @@ contract('Crucible - payout', async (accounts) => {
       crucible, cu.riskAmountWei, startBalances, addTx
     );
 
+    // trigger fee payout
+    tx = await crucible.collectFee.sendTransaction(
+      address.oracle, { 'from': address.oracle }
+    );
+    var evdata = await truffleAssert.createTransactionResult(crucible, tx);
+
+    // The correct fee is was sent to the oracle
+    cu.assertEventSent(evdata, 'FeeSent', address.oracle, fee);
+
     // trigger payout
     tx = await crucible.payout.sendTransaction(
       0, count, { 'from': address.oracle }
     );
-    var evdata = await truffleAssert.createTransactionResult(crucible, tx);
+    evdata = await truffleAssert.createTransactionResult(crucible, tx);
 
     // balances after payout
     await cu.assertBalanceZero(crucible);
@@ -176,7 +191,7 @@ contract('Crucible - payout', async (accounts) => {
     cu.assertUserWalletBalance(
       'user3',
       startBalances['user3']
-        .minus(cu.gasCost(addTx['user3']))
+        .minus(await cu.gasCost(addTx['user3']))
         .plus(
           cu.riskAmountWei.minus(fee)
         ).toNumber()
@@ -186,7 +201,7 @@ contract('Crucible - payout', async (accounts) => {
     cu.assertUserWalletBalance(
       'user2',
       startBalances['user2']
-        .minus(cu.gasCost(addTx['user2']))
+        .minus(await cu.gasCost(addTx['user2']))
         .minus(cu.riskAmountWei)
         .toNumber()
     );
@@ -195,11 +210,8 @@ contract('Crucible - payout', async (accounts) => {
     cu.assertEventSent(evdata, 'RefundSent', address.user1, cu.riskAmountWei);
     cu.assertUserWalletBalance(
       'user1',
-      startBalances['user1'].minus(cu.gasCost(addTx['user1'])).toNumber()
+      startBalances['user1'].minus(await cu.gasCost(addTx['user1'])).toNumber()
     );
-
-    // The correct fee is was sent to the oracle
-    cu.assertEventSent(evdata, 'FeeSent', address.oracle, fee);
 
     // We are in the paid state, and got the event
     await cu.assertCrucibleState(
@@ -231,11 +243,20 @@ contract('Crucible - payout', async (accounts) => {
       crucible, cu.riskAmountWei, startBalances, addTx
     );
 
+    // trigger fee payout
+    tx = await crucible.collectFee.sendTransaction(
+      address.oracle, { 'from': address.oracle }
+    );
+    var evdata = await truffleAssert.createTransactionResult(crucible, tx);
+
+    // no fee to pay
+    truffleAssert.eventNotEmitted(evdata, 'FeeSent');
+
     // trigger payout
     tx = await crucible.payout.sendTransaction(
       0, count, { 'from': address.oracle }
     );
-    var evdata = await truffleAssert.createTransactionResult(crucible, tx);
+    evdata = await truffleAssert.createTransactionResult(crucible, tx);
 
     // balances after payout
     await cu.assertBalanceZero(crucible);
@@ -247,12 +268,11 @@ contract('Crucible - payout', async (accounts) => {
       );
       cu.assertUserWalletBalance(
         'user' + i,
-        startBalances['user' + i].minus(cu.gasCost(addTx['user' + i])).toNumber()
+        startBalances['user' + i].minus(await cu.gasCost(addTx['user' + i])).toNumber()
       );
     }
 
     // events NOT emitted
-    truffleAssert.eventNotEmitted(evdata, 'FeeSent');
     truffleAssert.eventNotEmitted(evdata, 'RefundSent');
 
     // We are in the paid state, and got the event
@@ -279,11 +299,20 @@ contract('Crucible - payout', async (accounts) => {
       crucible, cu.riskAmountWei, startBalances, addTx
     );
 
+    // trigger fee payout
+    tx = await crucible.collectFee.sendTransaction(
+      address.oracle, { 'from': address.oracle }
+    );
+    var evdata = await truffleAssert.createTransactionResult(crucible, tx);
+
+    // no fee to pay
+    truffleAssert.eventNotEmitted(evdata, 'FeeSent');
+
     // trigger payout
     tx = await crucible.payout.sendTransaction(
       0, count, { 'from': address.oracle }
     );
-    var evdata = await truffleAssert.createTransactionResult(crucible, tx);
+    evdata = await truffleAssert.createTransactionResult(crucible, tx);
 
     // balances after payout
     await cu.assertBalanceZero(crucible);
@@ -295,12 +324,11 @@ contract('Crucible - payout', async (accounts) => {
       );
       cu.assertUserWalletBalance(
         'user' + i,
-        startBalances['user' + i].minus(cu.gasCost(addTx['user' + i])).toNumber()
+        startBalances['user' + i].minus(await cu.gasCost(addTx['user' + i])).toNumber()
       );
     }
 
     // events NOT emitted
-    truffleAssert.eventNotEmitted(evdata, 'FeeSent');
     truffleAssert.eventNotEmitted(evdata, 'PaymentSent');
 
     // We are in the paid state, and got the event
@@ -333,34 +361,16 @@ contract('Crucible - payout', async (accounts) => {
       crucible, cu.riskAmountWei, startBalances, addTx
     );
 
-    // trigger payout
-    tx = await crucible.payout.sendTransaction(
-      0, count, { 'from': address.oracle }
+    // trigger fee payout
+    tx = await crucible.collectFee.sendTransaction(
+      address.oracle, { 'from': address.oracle }
     );
     var evdata = await truffleAssert.createTransactionResult(crucible, tx);
 
-    // balances after payout
-    await cu.assertBalanceZero(crucible);
-
-    // all three participants failed
-    for (var i = 1; i <= 3; i++) {
-      cu.assertUserWalletBalance(
-        'user' + i,
-        startBalances['user' + i]
-          .minus(cu.gasCost(addTx['user' + i]))
-          .minus(cu.riskAmountWei)
-          .toNumber()
-      );
-    }
-
-    // oracle received the entire balance as a fee
+    // The correct fee is was sent to the oracle
     cu.assertEventSent(
       evdata, 'FeeSent', address.oracle, cu.riskAmountWei.times(3)
     );
-
-    // events NOT emitted
-    truffleAssert.eventNotEmitted(evdata, 'RefundSent');
-    truffleAssert.eventNotEmitted(evdata, 'PaymentSent');
 
     // We are in the paid state, and got the event
     await cu.assertCrucibleState(
@@ -370,6 +380,25 @@ contract('Crucible - payout', async (accounts) => {
       cu.crucibleStateIsFinished,
       cu.crucibleStateIsPaid
     );
+
+    // trigger payout
+    await expectThrow(
+      crucible.payout.sendTransaction(0, count, { 'from': address.oracle }
+    ), EVMRevert);
+
+    // balances after payout
+    await cu.assertBalanceZero(crucible);
+
+    // all three participants failed
+    for (var i = 1; i <= 3; i++) {
+      cu.assertUserWalletBalance(
+        'user' + i,
+        startBalances['user' + i]
+          .minus(await cu.gasCost(addTx['user' + i]))
+          .minus(cu.riskAmountWei)
+          .toNumber()
+      );
+    }
   });
 
   it('can partial payout with participants in PASS, FAIL, and WAITING', async () => {
@@ -399,12 +428,9 @@ contract('Crucible - payout', async (accounts) => {
 
     // trigger partial payout
     tx = await crucible.payout.sendTransaction(
-      0, 1, { 'from': address.oracle }
+      0, 1, { 'from': address.user1 }
     );
     var evdata = await truffleAssert.createTransactionResult(crucible, tx);
-
-    // The correct fee is was sent to the oracle
-    cu.assertEventSent(evdata, 'FeeSent', address.oracle, fee);
 
     // This participant passed, calculate payout
     var bonus = cu.riskAmountWei.minus(fee);
@@ -414,19 +440,21 @@ contract('Crucible - payout', async (accounts) => {
     cu.assertUserWalletBalance(
       'user1',
       startBalances['user1']
-        .minus(cu.gasCost(addTx['user1']))
+        .minus(await cu.gasCost(addTx['user1']))
+        .minus(await cu.gasCost(tx))
         .plus(
           cu.riskAmountWei.minus(fee)
         ).toNumber()
     );
 
     // events NOT emitted
+    truffleAssert.eventNotEmitted(evdata, 'FeeSent');
     truffleAssert.eventNotEmitted(evdata, 'RefundSent');
     truffleAssert.eventNotEmitted(evdata, 'CrucibleStateChange');
 
     // trigger partial payout
     tx = await crucible.payout.sendTransaction(
-      1, 1, { 'from': address.oracle }
+      1, 1, { 'from': address.user2 }
     );
     evdata = await truffleAssert.createTransactionResult(crucible, tx);
 
@@ -434,7 +462,8 @@ contract('Crucible - payout', async (accounts) => {
     cu.assertUserWalletBalance(
       'user2',
       startBalances['user2']
-        .minus(cu.gasCost(addTx['user2']))
+        .minus(await cu.gasCost(addTx['user2']))
+        .minus(await cu.gasCost(tx))
         .minus(cu.riskAmountWei)
         .toNumber()
     );
@@ -447,7 +476,7 @@ contract('Crucible - payout', async (accounts) => {
 
     // trigger partial payout
     tx = await crucible.payout.sendTransaction(
-      2, 1, { 'from': address.oracle }
+      2, 1, { 'from': address.user3 }
     );
     evdata = await truffleAssert.createTransactionResult(crucible, tx);
 
@@ -455,15 +484,15 @@ contract('Crucible - payout', async (accounts) => {
     cu.assertEventSent(evdata, 'RefundSent', address.user3, cu.riskAmountWei);
     cu.assertUserWalletBalance(
       'user3',
-      startBalances['user3'].minus(cu.gasCost(addTx['user3'])).toNumber()
+      startBalances['user3']
+        .minus(await cu.gasCost(addTx['user3']))
+        .minus(await cu.gasCost(tx))
+        .toNumber()
     );
 
     // events NOT emitted
     truffleAssert.eventNotEmitted(evdata, 'PaymentSent');
     truffleAssert.eventNotEmitted(evdata, 'FeeSent');
-
-    // balances after payout
-    await cu.assertBalanceZero(crucible);
 
     // We are in the paid state, and got the event
     await cu.assertCrucibleState(
@@ -473,6 +502,22 @@ contract('Crucible - payout', async (accounts) => {
       cu.crucibleStateIsFinished,
       cu.crucibleStateIsPaid
     );
+
+    // balances after payout
+    await cu.assertUserBalances(crucible, 0);
+    await cu.assertContractBalance(crucible, fee);
+
+    // trigger fee payout
+    tx = await crucible.collectFee.sendTransaction(
+      address.oracle, { 'from': address.oracle }
+    );
+    evdata = await truffleAssert.createTransactionResult(crucible, tx);
+
+    // The correct fee is was sent to the oracle
+    cu.assertEventSent(evdata, 'FeeSent', address.oracle, fee);
+
+    // balances after fee payout
+    await cu.assertBalanceZero(crucible);
   });
 
   it('can partial payout with participants all in PASS state', async () => {
@@ -496,12 +541,15 @@ contract('Crucible - payout', async (accounts) => {
     );
 
     var evdata;
+    var payoutTx = {};
     for (var i = 0; i < 3; i++) {
       // trigger payout
       tx = await crucible.payout.sendTransaction(
-        i, 1, { 'from': address.oracle }
+        i, 1, { 'from': address['user' + (i + 1)] }
       );
       evdata = await truffleAssert.createTransactionResult(crucible, tx);
+
+      payoutTx['user' + (i + 1)] = tx;
 
       // events emitted
       truffleAssert.eventEmitted(evdata, 'PaymentSent');
@@ -518,7 +566,10 @@ contract('Crucible - payout', async (accounts) => {
     for (var i = 1; i <= 3; i++) {
       cu.assertUserWalletBalance(
         'user' + i,
-        startBalances['user' + i].minus(cu.gasCost(addTx['user' + i])).toNumber()
+        startBalances['user' + i]
+          .minus(await cu.gasCost(addTx['user' + i]))
+          .minus(await cu.gasCost(payoutTx['user' + i]))
+          .toNumber()
       );
     }
 
@@ -530,6 +581,17 @@ contract('Crucible - payout', async (accounts) => {
       cu.crucibleStateIsFinished,
       cu.crucibleStateIsPaid
     );
+
+    // trigger fee payout
+    tx = await crucible.collectFee.sendTransaction(
+      address.oracle, { 'from': address.oracle }
+    );
+    evdata = await truffleAssert.createTransactionResult(crucible, tx);
+
+    truffleAssert.eventNotEmitted(evdata, 'FeeSent');
+
+    // balances after fee payout
+    await cu.assertBalanceZero(crucible);
   });
 
   it('can partial payout with participants all in WAITING state', async () => {
@@ -546,19 +608,23 @@ contract('Crucible - payout', async (accounts) => {
       crucible, cu.riskAmountWei, startBalances, addTx
     );
 
-    var processedWaiting = await crucible.processedWaiting();
-    assert.equal(processedWaiting, false, '_processWaiting() not run yet');
-
     var reserve = await crucible.reserve();
-    assert.equal(reserve.toNumber(), 0, 'reserve is 0');
+    assert.equal(
+      reserve.toNumber(),
+      cu.riskAmountWei.times(3).toNumber(),
+      'reserve is correct'
+    );
 
     var evdata;
+    var payoutTx = {};
     for (var i = 0; i < 3; i++) {
       // trigger payout
       tx = await crucible.payout.sendTransaction(
-        i, 1, { 'from': address.oracle }
+        i, 1, { 'from': address['user' + (i + 1)] }
       );
       evdata = await truffleAssert.createTransactionResult(crucible, tx);
+
+      payoutTx['user' + (i + 1)] = tx;
 
       // events emitted
       truffleAssert.eventEmitted(evdata, 'RefundSent');
@@ -583,7 +649,10 @@ contract('Crucible - payout', async (accounts) => {
     for (var i = 1; i <= 3; i++) {
       cu.assertUserWalletBalance(
         'user' + i,
-        startBalances['user' + i].minus(cu.gasCost(addTx['user' + i])).toNumber()
+        startBalances['user' + i]
+          .minus(await cu.gasCost(addTx['user' + i]))
+          .minus(await cu.gasCost(payoutTx['user' + i]))
+          .toNumber()
       );
     }
 
@@ -599,8 +668,16 @@ contract('Crucible - payout', async (accounts) => {
     reserve = await crucible.reserve();
     assert.equal(reserve.toNumber(), 0, 'reserve is 0 again');
 
-    processedWaiting = await crucible.processedWaiting();
-    assert.equal(processedWaiting, true, '_processWaiting() worked');
+    // trigger fee payout
+    tx = await crucible.collectFee.sendTransaction(
+      address.oracle, { 'from': address.oracle }
+    );
+    evdata = await truffleAssert.createTransactionResult(crucible, tx);
+
+    truffleAssert.eventNotEmitted(evdata, 'FeeSent');
+
+    // balances after fee payout
+    await cu.assertBalanceZero(crucible);
   });
 
   it('can partial payout with participants all in FAIL state', async () => {
@@ -609,8 +686,8 @@ contract('Crucible - payout', async (accounts) => {
 
     tx = await crucible.judgement.sendTransaction({ 'from': address.oracle });
 
-    var processedFeePayout = await crucible.processedFeePayout();
-    assert.equal(processedFeePayout, false, '_processedFeePayout() not run yet');
+    var calculateFee = await crucible.calculateFee();
+    assert.equal(calculateFee, false, '_calculateFee() not run yet');
 
     var penalty = await crucible.penalty();
     assert.equal(penalty.toNumber(), 0, 'penalty = 0');
@@ -648,24 +725,21 @@ contract('Crucible - payout', async (accounts) => {
         );
         evdata = await truffleAssert.createTransactionResult(crucible, tx);
 
-        // oracle received the entire balance as a fee
-        cu.assertEventSent(
-          evdata, 'FeeSent', address.oracle, cu.riskAmountWei.times(3)
-        );
-
         // events NOT emitted
+        truffleAssert.eventNotEmitted(evdata, 'FeeSent');
         truffleAssert.eventNotEmitted(evdata, 'RefundSent');
         truffleAssert.eventNotEmitted(evdata, 'PaymentSent');
 
         // balances after payout
-        await cu.assertBalanceZero(crucible);
+        await cu.assertUserBalances(crucible, 0);
+        await cu.assertContractBalance(crucible, cu.riskAmountWei.times(3));
 
         // all three participants failed
         for (var i = 1; i <= 3; i++) {
           cu.assertUserWalletBalance(
             'user' + i,
             startBalances['user' + i]
-              .minus(cu.gasCost(addTx['user' + i]))
+              .minus(await cu.gasCost(addTx['user' + i]))
               .minus(cu.riskAmountWei)
               .toNumber()
           );
@@ -684,17 +758,31 @@ contract('Crucible - payout', async (accounts) => {
         penalty = await crucible.penalty();
         assert.equal(penalty.toNumber(), 0, 'penalty is 0 becasue of max fee');
 
-        processedFeePayout = await crucible.processedFeePayout();
-        assert.equal(processedFeePayout, true, '_processedFeePayout() run');
+        calculateFee = await crucible.calculateFee();
+        assert.equal(calculateFee, true, '_calculateFee() run');
       } else {
-        processedFeePayout = await crucible.processedFeePayout();
-        assert.equal(processedFeePayout, true, '_processedFeePayout() run');
+        calculateFee = await crucible.calculateFee();
+        assert.equal(calculateFee, true, '_calculateFee() run');
 
         await expectThrow(crucible.payout.sendTransaction(
           i, 1, { 'from': address.oracle }
         ), EVMRevert);
       }
     }
+
+    // trigger fee payout
+    tx = await crucible.collectFee.sendTransaction(
+      address.oracle, { 'from': address.oracle }
+    );
+    evdata = await truffleAssert.createTransactionResult(crucible, tx);
+
+    // The correct fee is was sent to the oracle
+    cu.assertEventSent(
+      evdata, 'FeeSent', address.oracle, cu.riskAmountWei.times(3)
+    );
+
+    // balances after fee payout
+    await cu.assertBalanceZero(crucible);
   });
 
   it('revert if _records = 0', async () => {
@@ -795,7 +883,7 @@ contract('Crucible - payout', async (accounts) => {
           cu.assertUserWalletBalance(
             'user' + i,
             startBalances['user' + i]
-              .minus(cu.gasCost(addTx['user' + i]))
+              .minus(await cu.gasCost(addTx['user' + i]))
               .toNumber()
           );
         }
@@ -810,6 +898,128 @@ contract('Crucible - payout', async (accounts) => {
         );
       }
     }
+  });
+
+  // This is super important.  Obviously, the more folks one tries to payout
+  // in a single call to payout will cost more gas; however, we need a single
+  // participant payout to consume a constant amount of gas.  If they don't
+  // then we would need to set a participant limit to prevent the crucible from
+  // eventually passing the block gas limit.
+  it('gasUsed does not grow with data set for a single payout', async () => {
+    var tx;
+    var evdata;
+    var balance;
+
+    crucible = await Crucible.new(
+      address.oracle,
+      'test',
+      cu.startDate(),
+      cu.lockDate(2),
+      cu.endDate(4),
+      cu.minAmountWei,
+      { from: address.oracle }
+    );
+
+    for (var i = 1; i <= 2; i++) {
+      startBalances['user' + i] = await web3.eth.getBalance(address['user' + i]);
+      tx = await cu.add(crucible, 'user' + i);
+      addTx['user' + i] = tx;
+    }
+
+    feeNumerator = await crucible.feeNumerator();
+    feeDenominator = await crucible.feeDenominator();
+    fee = cu.riskAmountWei.times(feeNumerator).dividedBy(feeDenominator);
+    count = await crucible.count();
+
+    await cu.sleep(2000);
+    tx = await crucible.lock.sendTransaction({ 'from': address.oracle });
+    await cu.sleep(2000);
+    tx = await crucible.judgement.sendTransaction({ 'from': address.oracle });
+
+    // all participants PASS the crucible
+    for (var i = 1; i <= 2; i++) {
+      tx = await crucible.setGoal.sendTransaction(
+        address['user' + i], true, { 'from': address.oracle }
+      );
+    }
+
+    tx = await crucible.finish.sendTransaction({ 'from': address.oracle });
+
+    // trigger payout
+    tx = await web3.eth.getTransactionReceipt(
+      await crucible.payout.sendTransaction(0, 1, { 'from': address.oracle })
+    );
+
+    var firstGasUsed = tx.gasUsed;
+
+    tx = await web3.eth.getTransactionReceipt(
+      await crucible.payout.sendTransaction(1, 1, { 'from': address.oracle })
+    );
+
+    var lastGasUsed = tx.gasUsed;
+
+    crucible = await Crucible.new(
+      address.oracle,
+      'test',
+      cu.startDate(),
+      cu.lockDate(2),
+      cu.endDate(4),
+      cu.minAmountWei,
+      { from: address.oracle }
+    );
+
+    for (var i = 1; i <= 3; i++) {
+      startBalances['user' + i] = await web3.eth.getBalance(address['user' + i]);
+      tx = await cu.add(crucible, 'user' + i);
+      addTx['user' + i] = tx;
+    }
+
+    feeNumerator = await crucible.feeNumerator();
+    feeDenominator = await crucible.feeDenominator();
+    fee = cu.riskAmountWei.times(feeNumerator).dividedBy(feeDenominator);
+    count = await crucible.count();
+
+    await cu.sleep(2000);
+    tx = await crucible.lock.sendTransaction({ 'from': address.oracle });
+    await cu.sleep(2000);
+    tx = await crucible.judgement.sendTransaction({ 'from': address.oracle });
+
+    // all participants PASS the crucible
+    for (var i = 1; i <= 3; i++) {
+      tx = await crucible.setGoal.sendTransaction(
+        address['user' + i], true, { 'from': address.oracle }
+      );
+    }
+
+    tx = await crucible.finish.sendTransaction({ 'from': address.oracle });
+
+    // trigger payout
+    tx = await web3.eth.getTransactionReceipt(
+      await crucible.payout.sendTransaction(0, 1, { 'from': address.oracle })
+    );
+
+    // NOTE: firstGasUsed is the most expensive payout call, users should
+    // always send a gas limit of 100,000 to this function.
+    assert.equal(
+      tx.gasUsed,
+      firstGasUsed,
+      'the first payout call uses constant gas as the data set grows'
+    );
+
+    tx = await web3.eth.getTransactionReceipt(
+      await crucible.payout.sendTransaction(1, 1, { 'from': address.oracle })
+    );
+
+    tx = await web3.eth.getTransactionReceipt(
+      await crucible.payout.sendTransaction(2, 1, { 'from': address.oracle })
+    );
+
+    assert.equal(
+      tx.gasUsed,
+      lastGasUsed,
+      'the last payout call uses constant gas as the data set grows'
+    );
+
   });
 
   // TODO(godsflaw): what happens if we try to pay, refund, or pay the fee to a

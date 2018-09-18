@@ -209,7 +209,13 @@ CrucibleUtils.prototype.crucibleStateIsBroken = function (state) {
   return false;
 };
 
-CrucibleUtils.prototype.gasCost = function (tx) {
+CrucibleUtils.prototype.gasCost = async function (_tx) {
+  var tx = _tx;
+
+  if (tx.gasUsed === undefined) {
+    tx = await web3.eth.getTransactionReceipt(_tx);
+  }
+
   return (this.gasPrice * tx.gasUsed);
 };
 
@@ -240,30 +246,41 @@ CrucibleUtils.prototype.assertStartBalances =
     this.assertUserWalletBalance(
       'user' + i,
       startBalances['user' + i]
-        .minus(this.gasCost(addTx['user' + i]))
+        .minus(await this.gasCost(addTx['user' + i]))
         .minus(risk)
         .toNumber(),
     );
-//    balance = await web3.eth.getBalance(this.address['user' + i]);
-//    assert.equal(
-//      balance.toNumber(),
-//      startBalances['user' + i]
-//        .minus(this.gasCost(addTx['user' + i]))
-//        .minus(risk)
-//        .toNumber(),
-//      'user' + i + ': start balance correct'
-//    );
   }
 };
 
-CrucibleUtils.prototype.assertBalanceZero = async function (crucible) {
+// this checks balances in the crucible
+CrucibleUtils.prototype.assertUserBalances = async function (crucible, bal) {
+  if (bal === undefined || bal === 0) {
+    bal = new BigNumber(0);
+  }
+
   for (var i = 1; i <= 3; i++) {
     var commitment = await crucible.commitments.call(this.address['user' + i]);
-    assert.equal(commitment[1].toNumber(), 0, 'user' + i + ': zero balance');
+    assert.equal(
+      commitment[1].toNumber(), bal.toNumber(), 'user' + i + ': correct balance'
+    );
+  }
+};
+
+CrucibleUtils.prototype.assertContractBalance = async function (crucible, bal) {
+  if (bal === undefined || bal === 0) {
+    bal = new BigNumber(0);
   }
 
   var balance = await web3.eth.getBalance(crucible.address);
-  assert.equal(balance.toNumber(), 0, 'crucible balance is 0');
+  assert.equal(
+    balance.toNumber(), bal.toNumber(), 'crucible balance is correct'
+  );
+};
+
+CrucibleUtils.prototype.assertBalanceZero = async function (crucible) {
+  await this.assertUserBalances(crucible, 0);
+  await this.assertContractBalance(crucible, 0);
 };
 
 CrucibleUtils.prototype.assertCrucibleState =
@@ -281,6 +298,7 @@ CrucibleUtils.prototype.assertCrucibleState =
   assert(toTest.call(self, state), 'crucible is in the correct state');
 };
 
+// this checks balances in the wallets
 CrucibleUtils.prototype.assertUserWalletBalance =
   async function (user, expectedBalance) {
 
@@ -290,7 +308,7 @@ CrucibleUtils.prototype.assertUserWalletBalance =
     expectedBalance,
     user + ': balance correct'
   );
-}
+};
 
 CrucibleUtils.prototype.assertEventSent =
   async function (evdata, eventName, addr, amount) {
