@@ -61,7 +61,7 @@ contract('Crucible - judgement', async (accounts) => {
     }, 'fromState and toState are correct');
   });
 
-  it('only oracle can change crucible state to JUDGEMENT', async () => {
+  it('anyone can change crucible state to JUDGEMENT', async () => {
     await cu.sleep(2000);
     var tx = await crucible.lock.sendTransaction({ 'from': address.oracle });
 
@@ -69,9 +69,11 @@ contract('Crucible - judgement', async (accounts) => {
     assert(cu.crucibleStateIsLocked(state), 'crucible is in the LOCKED state');
     await cu.sleep(2000);
 
-    await expectThrow(crucible.judgement.sendTransaction(
-      { 'from': address.user1 }
-    ), EVMRevert);
+    tx = await crucible.judgement.sendTransaction({ 'from': address.user1 });
+    state = await crucible.state.call();
+    assert(
+      cu.crucibleStateIsJudgement(state), 'crucible is in the JUDGEMENT state'
+    );
   });
 
   it('judgement only changes state if we are past endDate', async () => {

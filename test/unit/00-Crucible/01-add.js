@@ -116,6 +116,18 @@ contract('Crucible - add', async (accounts) => {
     );
   });
 
+  it('reserve grows as users are added', async () => {
+    for (i = 1; i <= 3; i++) {
+      var tx = await cu.add(crucible, 'user' + i);
+      var reserve = await crucible.reserve.call();
+      assert.equal(
+        reserve.toNumber(),
+        cu.riskAmountWei.times(i).toNumber(),
+        'reserve is correct'
+      );
+    }
+  });
+
   it('add participant with amount below minAmount', async () => {
     await expectThrow(cu.add(crucible, 'user1', cu.tooLowAmountWei), EVMRevert);
   });

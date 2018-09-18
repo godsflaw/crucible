@@ -60,7 +60,6 @@ contract('Crucible - payout', async (accounts) => {
   });
 
   it('can payout with participants in PASS, FAIL, and WAITING', async () => {
-    var balance;
     var tx;
 
     // set user2 to FAIL
@@ -143,7 +142,6 @@ contract('Crucible - payout', async (accounts) => {
   });
 
   it('[regression] payout in reverse WAITING, FAIL, and PASS', async () => {
-    var balance;
     var tx;
 
     // set user3 to PASS
@@ -226,7 +224,6 @@ contract('Crucible - payout', async (accounts) => {
   });
 
   it('can payout with participants all in PASS state', async () => {
-    var balance;
     var tx;
 
     tx = await crucible.judgement.sendTransaction({ 'from': address.oracle });
@@ -288,7 +285,6 @@ contract('Crucible - payout', async (accounts) => {
   });
 
   it('can payout with participants all in WAITING state', async () => {
-    var balance;
     var tx;
 
     tx = await crucible.judgement.sendTransaction({ 'from': address.oracle });
@@ -344,7 +340,6 @@ contract('Crucible - payout', async (accounts) => {
   });
 
   it('can payout with participants all in FAIL state', async () => {
-    var balance;
     var tx;
 
     tx = await crucible.judgement.sendTransaction({ 'from': address.oracle });
@@ -404,7 +399,6 @@ contract('Crucible - payout', async (accounts) => {
   });
 
   it('can partial payout with participants in PASS, FAIL, and WAITING', async () => {
-    var balance;
     var tx;
 
     // set user2 to FAIL
@@ -523,7 +517,6 @@ contract('Crucible - payout', async (accounts) => {
   });
 
   it('can partial payout with participants all in PASS state', async () => {
-    var balance;
     var tx;
 
     tx = await crucible.judgement.sendTransaction({ 'from': address.oracle });
@@ -597,7 +590,6 @@ contract('Crucible - payout', async (accounts) => {
   });
 
   it('can partial payout with participants all in WAITING state', async () => {
-    var balance;
     var tx;
 
     tx = await crucible.judgement.sendTransaction({ 'from': address.oracle });
@@ -683,7 +675,6 @@ contract('Crucible - payout', async (accounts) => {
   });
 
   it('can partial payout with participants all in FAIL state', async () => {
-    var balance;
     var tx;
 
     tx = await crucible.judgement.sendTransaction({ 'from': address.oracle });
@@ -788,7 +779,6 @@ contract('Crucible - payout', async (accounts) => {
   });
 
   it('revert if _records = 0', async () => {
-    var balance;
     var tx;
 
     tx = await crucible.judgement.sendTransaction({ 'from': address.oracle });
@@ -810,7 +800,6 @@ contract('Crucible - payout', async (accounts) => {
   it('bounds check payout _startIndex = x, _records = y', async () => {
     var tx;
     var evdata;
-    var balance;
 
     for (var x = 0; x < 5; x++) {
       crucible = await Crucible.new(
@@ -912,7 +901,6 @@ contract('Crucible - payout', async (accounts) => {
   it('gasUsed does not grow with data set for a single payout', async () => {
     var tx;
     var evdata;
-    var balance;
 
     crucible = await Crucible.new(
       address.oracle,

@@ -234,10 +234,54 @@ contract('Crucible - base', async (accounts) => {
     });
 
     var result = await truffleAssert.createTransactionResult(crucible, tx);
-    truffleAssert.eventEmitted(result, 'FundsReceived', (ev) => {
+    truffleAssert.eventEmitted(result, 'FundsReceivedPayable', (ev) => {
       return ev.fromAddress === address.owner &&
         ev.amount.toNumber() === cu.tooLowAmountWei.toNumber();
     }, 'event fired and fromAddress and amount are correct');
+  });
+
+  it('payable stays under gas stipend of 2,300', async () => {
+    var tx = await web3.eth.sendTransaction({
+      from: address.owner,
+      to: crucible.address,
+      value: cu.tooLowAmountWei,
+    });
+
+    cu.assertTxUnderGasStipend(tx);
+  });
+
+  it('payable only works while OPEN', async () => {
+    crucible = await Crucible.new(
+      address.oracle,
+      'test',
+      cu.startDate(),
+      cu.lockDate(1),
+      cu.endDate(3),
+      cu.minAmountWei,
+      10,
+      cu.feeNumerator,
+      { from: address.oracle }
+    );
+
+    var state = await crucible.state.call();
+    assert(cu.crucibleStateIsOpen(state), 'crucible is in the OPEN state');
+    await cu.sleep(1000);
+    var tx = await crucible.lock.sendTransaction({ 'from': address.oracle });
+    state = await crucible.state.call();
+    assert(cu.crucibleStateIsLocked(state), 'crucible is in the LOCKED state');
+
+    try {
+      // lame, for some reason expectThrow() can't catch this one.  I just
+      // did it with try/catch because it was quicker.
+      await web3.eth.sendTransaction({
+        from: address.owner,
+        to: crucible.address,
+        value: cu.tooLowAmountWei,
+      });
+      assert.isOk(false, 'transaction should revert');
+    } catch (err) {
+      assert.isOk(true, 'transaction should revert');
+    }
   });
 
 });

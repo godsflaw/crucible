@@ -30,6 +30,9 @@ function CrucibleUtils(options) {
 
   this.address = options.address || new Address();
   this.gasPrice = options.gasPrice || 100000000000;
+  this.txGasCostBase = options.txGasCostBase || 2100000000000000;
+  this.gasScale = options.gasScale || 100000000000;
+  this.gasStipend = options.gasStipend || 2300;
   this.timeout = options.timeout || 691200;
   this.feeNumerator = options.feeNumerator || 100;
 
@@ -318,6 +321,12 @@ CrucibleUtils.prototype.assertEventSent =
   truffleAssert.eventEmitted(evdata, eventName, (ev) => {
     return ev.recipient === addr && ev.amount.eq(amount);
   }, 'got ' + eventName + ' event with correct recipient and amount');
+};
+
+CrucibleUtils.prototype.assertTxUnderGasStipend = async function (tx) {
+  var gasCost = await this.gasCost(tx);
+  var used = (gasCost - this.txGasCostBase) / this.gasScale;
+  assert(used <= this.gasStipend, 'transaction stayed under gas stipend');
 };
 
 module.exports = CrucibleUtils;

@@ -62,6 +62,46 @@ contract('Crucible - lock', async (accounts) => {
     assert(cu.crucibleStateIsLocked(state), 'crucible is in the LOCKED state');
   });
 
+  it('excess money found on balance is moved to penalty', async () => {
+    var penalty = await crucible.penalty.call();
+    assert.equal(penalty.toNumber(), 0, 'penalty is correct');
+
+    var tx = await web3.eth.sendTransaction({
+      from: address.owner,
+      to: crucible.address,
+      value: cu.tooLowAmountWei,
+    });
+
+    penalty = await crucible.penalty.call();
+    assert.equal(penalty.toNumber(), 0, 'penalty is correct');
+
+    var reserve = await crucible.reserve.call();
+    var balance = await web3.eth.getBalance(crucible.address);
+
+    assert(
+      reserve.plus(penalty).toNumber() < balance.toNumber(),
+      'reserve + penalty is less than balance'
+    );
+
+    await cu.sleep(2000);
+
+    tx = await crucible.lock.sendTransaction({ 'from': address.oracle });
+    state = await crucible.state.call();
+    assert(cu.crucibleStateIsLocked(state), 'crucible is in the LOCKED state');
+
+    reserve = await crucible.reserve.call();
+    penalty = await crucible.penalty.call();
+    balance = await web3.eth.getBalance(crucible.address);
+
+    assert.equal(penalty.toNumber(), cu.tooLowAmountWei, 'penalty is correct');
+
+    assert.equal(
+      reserve.plus(penalty).toNumber(),
+      balance.toNumber(),
+      'reserve + penalty is now the same as balance'
+    );
+  });
+
   it('lock only changes state if we are past lockDate', async () => {
     var state = await crucible.state.call();
     assert(cu.crucibleStateIsOpen(state), 'crucible is in the OPEN state');

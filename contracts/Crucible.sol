@@ -53,6 +53,7 @@ contract Crucible is Ownable {
   event PaymentSent(address recipient, uint256 amount);
   event RefundSent(address recipient, uint256 amount);
   event FundsReceived(address fromAddress, uint256 amount);
+  event FundsReceivedPayable(address fromAddress, uint256 amount);
   event CrucibleStateChange(CrucibleState fromState, CrucibleState toState);
   event CommitmentStateChange(
     address participant, GoalState fromState, GoalState toState
@@ -92,13 +93,23 @@ contract Crucible is Ownable {
 
     minimumAmount = _minimumAmount;
 
-    // TODO(godsflaw): check initial balance.  Attackers can send ETH to a
-    // contract address before the constructor is called.  Just make sure we
-    // don't already have a balance and adjust accordingly.
+    // It sounds strange, but even if an address doesn't exist yet, it can
+    // have a balance.  If the address this contract lands on already has a
+    // balance, we will just shunt that into penalty as a bonus to be
+    // distributed to participants later on.
+    penalty = address(this).balance;
   }
 
   function () external payable {
-    emit FundsReceived(msg.sender, msg.value);
+    require(
+      state == CrucibleState.OPEN,
+      'crucible only accepts funds while state is OPEN'
+    );
+
+    // The oracle is encouraged to listen for FundsReceivedPayable and either
+    // add the user to the crucible by calling add() or wait until LOCKED, when
+    // additional funds will be moved to penalty.
+    emit FundsReceivedPayable(msg.sender, msg.value);
   }
 
   // TODO(godsflaw): test this
@@ -226,7 +237,6 @@ contract Crucible is Ownable {
     });
     participants.push(_participant);
 
-    // TODO(godsflaw): test this
     reserve = reserve.add(commitments[_participant].amount);
 
     emit FundsReceived(_participant, msg.value);
@@ -242,18 +252,19 @@ contract Crucible is Ownable {
       participantExists(_participant) == true, "participant doesn't exist"
     );
 
+    uint256 amount = commitments[_participant].amount;
+
     if (_metGoal) {
       commitments[_participant].metGoal = GoalState.PASS;
-      // TODO(godsflaw): test this
-      reserve = reserve.sub(commitments[_participant].amount);
     } else {
       failedCount++;
       commitments[_participant].metGoal = GoalState.FAIL;
-      penalty = penalty.add(commitments[_participant].amount);
-      // TODO(godsflaw): test this
-      reserve = reserve.sub(commitments[_participant].amount);
+      penalty = penalty.add(amount);
       commitments[_participant].amount = 0;
     }
+
+    // in either case, we can move this participant's balance from reserve
+    reserve = reserve.sub(amount);
 
     emit CommitmentStateChange(
       _participant, GoalState.WAITING, commitments[_participant].metGoal
@@ -264,14 +275,24 @@ contract Crucible is Ownable {
     require(lockDate <= now, 'can only moved to LOCKED state after lockDate');
     require(state == CrucibleState.OPEN, 'state can only move OPEN -> LOCKED');
 
+    // Reserve should perfectly match the crucible balance.  Move any amount
+    // from balance that is greater than the reserve from balance to penalty.
+    // This handles both the case where the contract address already had a
+    // balance, and the case where money is sent directly to the contract but
+    // the oracle chose not to spend their own funds and add() it.
+    if (address(this).balance > reserve) {
+      uint256 delta = address(this).balance.sub(reserve);
+      penalty = penalty.add(delta);
+    }
+
     state = CrucibleState.LOCKED;
     emit CrucibleStateChange(CrucibleState.OPEN, CrucibleState.LOCKED);
   }
 
-  function judgement() public onlyOwner {
+  function judgement() public {
     require(endDate <= now, 'can only moved to JUDGEMENT state after endDate');
     require(
-      state == CrucibleState.LOCKED, 'state can only move JUDGEMENT -> LOCKED'
+      state == CrucibleState.LOCKED, 'state can only move LOCKED -> JUDGEMENT'
     );
 
     state = CrucibleState.JUDGEMENT;

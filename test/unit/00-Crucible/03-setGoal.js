@@ -153,6 +153,42 @@ contract('Crucible - setGoal', async (accounts) => {
     );
   });
 
+  it('setGoal PASS/FAIL decreases the reserve', async () => {
+    await cu.sleep(1000);
+    var tx = await crucible.lock.sendTransaction({ 'from': address.oracle });
+
+    var balance = await web3.eth.getBalance(crucible.address);
+    var reserve = await crucible.reserve();
+    assert.equal(reserve.toNumber(), balance.toNumber(), 'reserve is correct');
+    assert.equal(
+      reserve.toNumber(),
+      cu.riskAmountWei.times(3).toNumber(),
+      'reserve is correct'
+    );
+
+    tx = await crucible.setGoal(
+      address.user1, true, { 'from': address.oracle }
+    );
+
+    reserve = await crucible.reserve();
+    assert.equal(
+      reserve.toNumber(),
+      cu.riskAmountWei.times(2).toNumber(),
+      'reserve decreased'
+    );
+
+    tx = await crucible.setGoal(
+      address.user2, false, { 'from': address.oracle }
+    );
+
+    reserve = await crucible.reserve();
+    assert.equal(
+      reserve.toNumber(),
+      cu.riskAmountWei.times(1).toNumber(),
+      'reserve decreased'
+    );
+  });
+
   it('setGoal throws error if we are not the owner', async () => {
     await cu.sleep(1000);
     var tx = await crucible.lock.sendTransaction({ 'from': address.oracle });
