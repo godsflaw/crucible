@@ -29,6 +29,8 @@ contract('Crucible - base', async (accounts) => {
       lockDate,
       endDate,
       cu.minAmountWei,
+      cu.timeout,
+      cu.feeNumerator,
       { from: address.oracle }
     );
   });
@@ -50,6 +52,8 @@ contract('Crucible - base', async (accounts) => {
       cu.lockDate(),
       cu.endDate(),
       cu.minAmountWei,
+      cu.timeout,
+      cu.feeNumerator,
       { from: address.oracle }
     );
     var oracle = await crucible.owner.call();
@@ -71,6 +75,32 @@ contract('Crucible - base', async (accounts) => {
   it('verify reserve is set', async () => {
     var reserve = await crucible.reserve.call();
     assert.equal(reserve, 0, 'reserve is 0');
+  });
+
+  it('verify feePaid is set', async () => {
+    var feePaid = await crucible.feePaid.call();
+    assert.equal(feePaid, false, 'feePaid is false');
+  });
+
+  it('verify timeout is set', async () => {
+    var timeout = await crucible.timeout.call();
+    assert.equal(
+      timeout, (endDate - startDate), 'timeout is correct'
+    );
+  });
+
+  it('verify feeNumerator is set', async () => {
+    var feeNumerator = await crucible.feeNumerator.call();
+    assert.equal(
+      feeNumerator, cu.feeNumerator, 'feeNumerator is correct'
+    );
+  });
+
+  it('verify feeDenominator is set', async () => {
+    var feeDenominator = await crucible.feeDenominator.call();
+    assert.equal(
+      feeDenominator.toNumber(), 1000, 'feeDenominator is correct'
+    );
   });
 
   it('verify calculateFee is set', async () => {
@@ -110,6 +140,8 @@ contract('Crucible - base', async (accounts) => {
       cu.startDate(),
       cu.endDate(),
       cu.minAmountWei,
+      cu.timeout,
+      cu.feeNumerator,
       { from: address.oracle }
     ), EVMRevert);
   });
@@ -122,6 +154,8 @@ contract('Crucible - base', async (accounts) => {
       cu.endDate(),
       cu.lockDate(),
       cu.minAmountWei,
+      cu.timeout,
+      cu.feeNumerator,
       { from: address.oracle }
     ), EVMRevert);
   });
@@ -134,6 +168,8 @@ contract('Crucible - base', async (accounts) => {
       cu.lockDate(),
       cu.startDate(),
       cu.minAmountWei,
+      cu.timeout,
+      cu.feeNumerator,
       { from: address.oracle }
     ), EVMRevert);
   });
@@ -146,6 +182,22 @@ contract('Crucible - base', async (accounts) => {
       cu.lockDate(),
       cu.startDate(),
       0,
+      cu.timeout,
+      cu.feeNumerator,
+      { from: address.oracle }
+    ), EVMRevert);
+  });
+
+  it('timeout must be greater than to (endDate - startDate)', async () => {
+    await expectThrow(Crucible.new(
+      address.oracle,
+      'cu.startDate() test',
+      cu.endDate(),
+      cu.lockDate(),
+      cu.startDate(),
+      cu.endDate(),
+      (cu.endDate() - cu.startDate()) - 1,
+      cu.feeNumerator,
       { from: address.oracle }
     ), EVMRevert);
   });

@@ -22,6 +22,8 @@ contract('Crucible - broken', async (accounts) => {
       cu.lockDate(2),
       cu.endDate(10),
       cu.minAmountWei,
+      cu.timeout,
+      cu.feeNumerator,
       { from: address.oracle }
     );
 

@@ -34,7 +34,9 @@ contract('Foundry - getCount', async (accounts) => {
       cu.startDate(),
       cu.lockDate(),
       cu.endDate(),
-      cu.minAmountWei
+      cu.minAmountWei,
+      cu.timeout,
+      cu.feeNumerator,
     );
 
     await foundry.newCrucible(
@@ -43,7 +45,9 @@ contract('Foundry - getCount', async (accounts) => {
       cu.startDate(),
       cu.lockDate(),
       cu.endDate(),
-      cu.minAmountWei
+      cu.minAmountWei,
+      cu.timeout,
+      cu.feeNumerator,
     );
 
     var result = await foundry.getCount.call();
@@ -56,7 +60,9 @@ contract('Foundry - getCount', async (accounts) => {
       cu.startDate(),
       cu.lockDate(),
       cu.endDate(),
-      cu.minAmountWei
+      cu.minAmountWei,
+      cu.timeout,
+      cu.feeNumerator,
     );
 
     result = await foundry.getCount.call();

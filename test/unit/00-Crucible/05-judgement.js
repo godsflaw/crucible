@@ -22,6 +22,8 @@ contract('Crucible - judgement', async (accounts) => {
       cu.lockDate(2),
       cu.endDate(4),
       cu.minAmountWei,
+      cu.timeout,
+      cu.feeNumerator,
       { from: address.oracle }
     );
 

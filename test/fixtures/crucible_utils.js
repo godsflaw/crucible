@@ -30,6 +30,8 @@ function CrucibleUtils(options) {
 
   this.address = options.address || new Address();
   this.gasPrice = options.gasPrice || 100000000000;
+  this.timeout = options.timeout || 691200;
+  this.feeNumerator = options.feeNumerator || 100;
 
   this.zeroAmountEth = new BigNumber(0);
   this.zeroAmountWei = web3.toWei(this.zeroAmountEth, "ether");

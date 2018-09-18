@@ -29,7 +29,9 @@ contract('Foundry - newCrucible', async (accounts) => {
       cu.startDate(),
       cu.lockDate(),
       cu.endDate(),
-      cu.minAmountWei
+      cu.minAmountWei,
+      cu.timeout,
+      cu.feeNumerator,
     );
 
     truffleAssert.eventEmitted(tx, 'CrucibleCreated', async (ev) => {
@@ -61,7 +63,5 @@ contract('Foundry - newCrucible', async (accounts) => {
 
     name = await crucible.name.call();
     assert.equal(name.toString(), 'deadbeef', 'got crucible name');
-
-    // TODO(godsflaw): verify all variables we could pass to newCrucible()
   });
 });

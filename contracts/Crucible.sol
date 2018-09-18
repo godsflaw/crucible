@@ -9,19 +9,19 @@ contract Crucible is Ownable {
 
   string public name;
   bool public calculateFee = false;
-  bool public feePaid = false;            // TODO(godsflaw): test in constructor
+  bool public feePaid = false;
   uint public startDate;
   uint public lockDate;
   uint public endDate;
-  uint public timeout = 2419200;          // TODO(godsflaw): put in constructor
+  uint public timeout = 2419200;          // 28 days in seconds
   uint256 public minimumAmount;
   uint256 public failedCount = 0;
   uint256 public penalty = 0;
   uint256 public fee = 0;
   uint256 public released = 0;
   uint256 public reserve = 0;
-  uint256 public feeNumerator = 500;      // TODO(godsflaw): put in constructor
-  uint256 public feeDenominator = 1000;   // TODO(godsflaw): put in constructor
+  uint256 public feeNumerator = 100;
+  uint256 public feeDenominator = 1000;
   CrucibleState public state = CrucibleState.OPEN;
 
   address[] public participants;
@@ -58,7 +58,7 @@ contract Crucible is Ownable {
     address participant, GoalState fromState, GoalState toState
   );
 
-  constructor(address _owner, string _name, uint _startDate, uint _lockDate, uint _endDate, uint256 _minimumAmount) public {
+  constructor(address _owner, string _name, uint _startDate, uint _lockDate, uint _endDate, uint256 _minimumAmount, uint _timeout, uint256 _feeNumerator) public {
     name = _name;
 
     if (_owner == address(0x0)) {
@@ -75,6 +75,18 @@ contract Crucible is Ownable {
     startDate = _startDate;
     lockDate = _lockDate;
     endDate = _endDate;
+    feeNumerator = _feeNumerator;
+
+    // This is the time before the crucible can be moved into the broken state.
+    // Ensure that there is plenty of time after endDate before timeout.  We
+    // do this by requiring timeout to be at least as long as the time between
+    // startDate and endDate.
+    require(
+      _timeout >= (_endDate - _startDate),
+      "timeout must be >= (endDate - startDate) seconds"
+    );
+
+    timeout = _timeout;
 
     require(_minimumAmount > 0, "minimumAmount must be > 0");
 
