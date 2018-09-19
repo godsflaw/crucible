@@ -28,7 +28,7 @@ contract('Crucible - payout', async (accounts) => {
       cu.lockDate(2),
       cu.endDate(4),
       cu.minAmountWei,
-      cu.timeout,
+      8,
       cu.feeNumerator,
       { from: address.oracle }
     );
@@ -1017,6 +1017,76 @@ contract('Crucible - payout', async (accounts) => {
     );
 
   });
+
+  it('payout will work if state moves to BROKEN', async () => {
+    var tx;
+
+    // set user2 to FAIL
+    tx = await crucible.setGoal.sendTransaction(
+      address.user2, false, { 'from': address.oracle }
+    );
+
+    tx = await crucible.judgement.sendTransaction({ 'from': address.oracle });
+
+    // set user1 to PASS
+    tx = await crucible.setGoal.sendTransaction(
+      address.user1, true, { 'from': address.oracle }
+    );
+
+    tx = await crucible.finish.sendTransaction({ 'from': address.oracle });
+
+    // Simulate at this point that the oracle is no longer active.
+    // This will allow users to trigger broken state.
+
+    // balances before payout
+    await cu.assertStartBalances(
+      crucible, cu.riskAmountWei, startBalances, addTx
+    );
+
+    // participants have to wait until timeout past endDate
+    await cu.sleep(8000);
+
+    // trigger payout (user1 wants their money)
+    tx = await crucible.payout.sendTransaction(
+      0, 1, { 'from': address.user1 }
+    );
+    evdata = await truffleAssert.createTransactionResult(crucible, tx);
+
+    cu.assertUserWalletBalance(
+      'user1',
+      startBalances['user1']
+        .minus(await cu.gasCost(addTx['user1']))
+        .minus(await cu.gasCost(tx))
+        .plus(
+          cu.riskAmountWei.minus(fee)
+        ).toNumber()
+    );
+
+    // This participant failed, so there was no payout
+    cu.assertUserWalletBalance(
+      'user2',
+      startBalances['user2']
+        .minus(await cu.gasCost(addTx['user2']))
+        .minus(cu.riskAmountWei)
+        .toNumber()
+    );
+
+    tx = await crucible.payout.sendTransaction(
+      2, 1, { 'from': address.user3 }
+    );
+    evdata = await truffleAssert.createTransactionResult(crucible, tx);
+
+    // This participant was stuck WAITING, so there was a refund
+    cu.assertEventSent(evdata, 'RefundSent', address.user3, cu.riskAmountWei);
+    cu.assertUserWalletBalance(
+      'user3',
+      startBalances['user3']
+        .minus(await cu.gasCost(addTx['user3']))
+        .minus(await cu.gasCost(tx))
+        .toNumber()
+    );
+  });
+
 
   // TODO(godsflaw): what happens if we try to pay, refund, or pay the fee to a
   // payable contract with a payable function that exceeds the gas stipend.

@@ -349,7 +349,6 @@ contract Crucible is Ownable {
   // payout that many records.  This method may be called many times, and will
   // eventually move the crucible to the PAID state.
   function payout(uint _startIndex, uint _records) public {
-    // TODO(godsflaw): test broken state here
     require(
       state == CrucibleState.FINISHED || state == CrucibleState.BROKEN,
       'can only payout if in FINISHED or BROKEN state'
