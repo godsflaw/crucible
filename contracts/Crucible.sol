@@ -393,5 +393,12 @@ contract Crucible is Ownable {
       feePaid = true;
       emit FeeSent(_destination, fee);
     }
+
+    // If not already in the PAID state, possibly move to the paid state.
+    // This catches the case where every commitment in a crucible fails and
+    // collectFee() is the only call.
+    if (state != CrucibleState.PAID) {
+      paid();
+    }
   }
 }
