@@ -111,7 +111,6 @@ contract Crucible is Ownable {
     emit FundsReceivedPayable(msg.sender, msg.value);
   }
 
-  // TODO(godsflaw): test this
   function kill() external onlyOwner {
     if (state == CrucibleState.PAID) {
       // TODO(godsflaw): clean up Foundry?
