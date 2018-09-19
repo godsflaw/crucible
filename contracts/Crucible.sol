@@ -328,7 +328,6 @@ contract Crucible is Ownable {
     }
   }
 
-  // TODO(godsflaw): test this
   function broken() public {
     require(
       (endDate + timeout) <= now,
