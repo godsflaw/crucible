@@ -95,9 +95,8 @@ contract Crucible is Ownable {
 
     // It sounds strange, but even if an address doesn't exist yet, it can
     // have a balance.  If the address this contract lands on already has a
-    // balance, we will just shunt that into penalty as a bonus to be
-    // distributed to participants later on.
-    penalty = address(this).balance;
+    // balance, we will just shunt that into penalty when lock() runs.  This
+    // means that the funds that already exist become a bonus for participants.
   }
 
   function () external payable {
@@ -309,7 +308,6 @@ contract Crucible is Ownable {
     emit CrucibleStateChange(CrucibleState.JUDGEMENT, CrucibleState.FINISHED);
   }
 
-  // TODO(godsflaw): test this
   function paid() public {
     require(
       state == CrucibleState.FINISHED || state == CrucibleState.BROKEN,
@@ -334,7 +332,11 @@ contract Crucible is Ownable {
   function broken() public {
     require(
       (endDate + timeout) <= now,
-      'can only moved to BROKEN state timeout past endDate'
+      'can only moved to BROKEN state timeout seconds past endDate'
+    );
+    require(
+      state == CrucibleState.JUDGEMENT || state == CrucibleState.FINISHED,
+      'can only move out of JUDGEMENT or FINISHED to BROKEN'
     );
     require(state != CrucibleState.PAID, 'sorry PAID is the final state');
 
@@ -390,11 +392,6 @@ contract Crucible is Ownable {
       released = released.add(fee);
       feePaid = true;
       emit FeeSent(_destination, fee);
-    }
-
-    // if not already in the PAID state, possibly move to the paid state
-    if (state != CrucibleState.PAID) {
-      paid();
     }
   }
 }
