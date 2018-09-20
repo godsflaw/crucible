@@ -254,12 +254,12 @@ contract('Crucible - payout', async (accounts) => {
     var evdata = await truffleAssert.createTransactionResult(crucible, tx);
 
     // The correct fee is was sent to the oracle
-//    cu.assertEventSent(
-//      evdata,
-//      'FeeSent',
-//      address.oracle,
-//      cu.riskAmountWei.times(2)
-//    );
+    cu.assertEventSent(
+      evdata,
+      'FeeSent',
+      address.oracle,
+      cu.riskAmountWei.times(2)
+    );
 
     // trigger payout
     tx = await crucible.payout.sendTransaction(
@@ -268,7 +268,7 @@ contract('Crucible - payout', async (accounts) => {
     evdata = await truffleAssert.createTransactionResult(crucible, tx);
 
     // balances after payout
-//    await cu.assertBalanceZero(crucible);
+    await cu.assertBalanceZero(crucible);
 
     // This participant failed, so there was no payout
     cu.assertUserWalletBalance(
@@ -296,13 +296,13 @@ contract('Crucible - payout', async (accounts) => {
     );
 
     // We are in the paid state, and got the event
-//    await cu.assertCrucibleState(
-//      crucible,
-//      evdata,
-//      'CrucibleStateChange',
-//      cu.crucibleStateIsFinished,
-//      cu.crucibleStateIsPaid
-//    );
+    await cu.assertCrucibleState(
+      crucible,
+      evdata,
+      'CrucibleStateChange',
+      cu.crucibleStateIsFinished,
+      cu.crucibleStateIsPaid
+    );
   });
 
   it('can payout with participants all in PASS state', async () => {
