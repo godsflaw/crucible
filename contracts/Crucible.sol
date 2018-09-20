@@ -374,7 +374,6 @@ contract Crucible is Ownable {
     paid();
   }
 
-  // TODO(godsflaw): test me
   function collectFee(address _destination) public onlyOwner {
     require(
       state == CrucibleState.FINISHED ||
@@ -392,8 +391,7 @@ contract Crucible is Ownable {
     }
 
     // If not already in the PAID state, possibly move to the paid state.
-    // This catches the case where every commitment in a crucible fails and
-    // collectFee() is the only call.
+    // This catches the case where no commitment passes.
     if (state != CrucibleState.PAID) {
       paid();
     }
