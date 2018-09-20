@@ -101,26 +101,26 @@ contract('Crucible - setGoal', async (accounts) => {
     }, 'participant, fromState, and toState are correct');
   });
 
-  it('setGoal FAIL increases the failedCount', async () => {
+  it('setGoal PASS increases the passCount', async () => {
     await cu.sleep(1000);
     var tx = await crucible.lock.sendTransaction({ 'from': address.oracle });
 
-    var failedCount = await crucible.failedCount();
-    assert.equal(failedCount.toNumber(), 0, 'failedCount is 0');
+    var passCount = await crucible.passCount();
+    assert.equal(passCount.toNumber(), 0, 'passCount is 0');
 
     tx = await crucible.setGoal(
-      address.user1, false, { 'from': address.oracle }
+      address.user1, true, { 'from': address.oracle }
     );
 
-    failedCount = await crucible.failedCount();
-    assert.equal(failedCount.toNumber(), 1, 'failedCount increased');
+    passCount = await crucible.passCount();
+    assert.equal(passCount.toNumber(), 1, 'passCount increased');
 
     tx = await crucible.setGoal(
-      address.user2, false, { 'from': address.oracle }
+      address.user2, true, { 'from': address.oracle }
     );
 
-    failedCount = await crucible.failedCount();
-    assert.equal(failedCount.toNumber(), 2, 'failedCount increased');
+    passCount = await crucible.passCount();
+    assert.equal(passCount.toNumber(), 2, 'passCount increased');
   });
 
   it('setGoal FAIL increases the penalty', async () => {

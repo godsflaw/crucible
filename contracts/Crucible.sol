@@ -15,7 +15,7 @@ contract Crucible is Ownable {
   uint public endDate;
   uint public timeout = 2419200;          // 28 days in seconds
   uint256 public minimumAmount;
-  uint256 public failedCount = 0;
+  uint256 public passCount = 0;
   uint256 public penalty = 0;
   uint256 public fee = 0;
   uint256 public released = 0;
@@ -128,8 +128,8 @@ contract Crucible is Ownable {
     }
 
     // if we have participants and all failed, then fee is the entire balance
-    if (failedCount == participants.length) {
-      fee = address(this).balance;
+    if (passCount == 0) {
+      fee = penalty;
     } else {
       fee = penalty.mul(feeNumerator).div(feeDenominator);
     }
@@ -253,9 +253,9 @@ contract Crucible is Ownable {
     uint256 amount = commitments[_participant].amount;
 
     if (_metGoal) {
+      passCount++;
       commitments[_participant].metGoal = GoalState.PASS;
     } else {
-      failedCount++;
       commitments[_participant].metGoal = GoalState.FAIL;
       penalty = penalty.add(amount);
       commitments[_participant].amount = 0;

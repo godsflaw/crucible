@@ -67,9 +67,9 @@ contract('Crucible - base', async (accounts) => {
     assert.equal(name, 'test', 'name = test expected');
   });
 
-  it('verify failedCount is set', async () => {
-    var failedCount = await crucible.failedCount.call();
-    assert.equal(failedCount, 0, 'failedCount is false');
+  it('verify passCount is set', async () => {
+    var passCount = await crucible.passCount.call();
+    assert.equal(passCount, 0, 'passCount is false');
   });
 
   it('verify reserve is set', async () => {

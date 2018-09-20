@@ -223,6 +223,88 @@ contract('Crucible - payout', async (accounts) => {
     );
   });
 
+  it('[regression] payout WAITING, FAIL, and FAIL', async () => {
+    var tx;
+
+    // set user3 to FAIL
+    tx = await crucible.setGoal.sendTransaction(
+      address.user3, false, { 'from': address.oracle }
+    );
+
+    tx = await crucible.judgement.sendTransaction({ 'from': address.oracle });
+
+    // set user2 to FAIL
+    tx = await crucible.setGoal.sendTransaction(
+      address.user2, false, { 'from': address.oracle }
+    );
+
+    tx = await crucible.finish.sendTransaction({ 'from': address.oracle });
+
+    // NOTE: we left user1 in WAITING state
+
+    // balances before payout
+    await cu.assertStartBalances(
+      crucible, cu.riskAmountWei, startBalances, addTx
+    );
+
+    // trigger fee payout
+    tx = await crucible.collectFee.sendTransaction(
+      address.oracle, { 'from': address.oracle }
+    );
+    var evdata = await truffleAssert.createTransactionResult(crucible, tx);
+
+    // The correct fee is was sent to the oracle
+//    cu.assertEventSent(
+//      evdata,
+//      'FeeSent',
+//      address.oracle,
+//      cu.riskAmountWei.times(2)
+//    );
+
+    // trigger payout
+    tx = await crucible.payout.sendTransaction(
+      0, count, { 'from': address.oracle }
+    );
+    evdata = await truffleAssert.createTransactionResult(crucible, tx);
+
+    // balances after payout
+//    await cu.assertBalanceZero(crucible);
+
+    // This participant failed, so there was no payout
+    cu.assertUserWalletBalance(
+      'user3',
+      startBalances['user3']
+        .minus(await cu.gasCost(addTx['user3']))
+        .minus(cu.riskAmountWei)
+        .toNumber()
+    );
+
+    // This participant failed, so there was no payout
+    cu.assertUserWalletBalance(
+      'user2',
+      startBalances['user2']
+        .minus(await cu.gasCost(addTx['user2']))
+        .minus(cu.riskAmountWei)
+        .toNumber()
+    );
+
+    // This participant was stuck WAITING, so there was a refund
+    cu.assertEventSent(evdata, 'RefundSent', address.user1, cu.riskAmountWei);
+    cu.assertUserWalletBalance(
+      'user1',
+      startBalances['user1'].minus(await cu.gasCost(addTx['user1'])).toNumber()
+    );
+
+    // We are in the paid state, and got the event
+//    await cu.assertCrucibleState(
+//      crucible,
+//      evdata,
+//      'CrucibleStateChange',
+//      cu.crucibleStateIsFinished,
+//      cu.crucibleStateIsPaid
+//    );
+  });
+
   it('can payout with participants all in PASS state', async () => {
     var tx;
 

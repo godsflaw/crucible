@@ -40,5 +40,7 @@ contract Foundry is Ownable {
     return crucible;
   }
 
+  // TODO(godsflaw): add newCrucibleWithCommitment()
+
   event CrucibleCreated(address contractAddress);
 }
