@@ -16,7 +16,7 @@ contract Foundry is Ownable {
 
   // total number of Crucibles produced by the Foundry
   function getCount()
-    public
+    external
     constant
     returns(uint)
   {
@@ -24,7 +24,7 @@ contract Foundry is Ownable {
   }
 
   // deploy a new crucible
-  function newCrucible(address _owner, string _name, uint _startDate, uint _lockDate, uint _endDate, uint256 _minimumAmount, uint _timeout, uint256 _feeNumerator) public returns(address) {
+  function newCrucible(address _owner, string _name, uint _startDate, uint _lockDate, uint _endDate, uint256 _minimumAmount, uint _timeout, uint256 _feeNumerator) external returns(address) {
     Crucible crucible = new Crucible(
       _owner,
       _name,

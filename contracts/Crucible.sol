@@ -99,12 +99,32 @@ contract Crucible is Ownable {
     // means that the funds that already exist become a bonus for participants.
   }
 
-  function () external payable {
+  modifier notInState(CrucibleState _state) {
+      require(
+          state != _state,
+          "Function cannot be called at this time."
+      );
+      _;
+  }
+
+  modifier inState(CrucibleState _state) {
+      require(
+          state == _state,
+          "Function cannot be called at this time."
+      );
+      _;
+  }
+
+  modifier inEitherState(CrucibleState _stateA, CrucibleState _stateB) {
+      require(
+          state == _stateA || state == _stateB,
+          "Function cannot be called at this time."
+      );
+      _;
+  }
+
+  function () external payable inState(CrucibleState.OPEN) {
     require(msg.data.length == 0);
-    require(
-      state == CrucibleState.OPEN,
-      'crucible only accepts funds while state is OPEN'
-    );
 
     // The oracle is encouraged to listen for FundsReceivedPayable and either
     // add the user to the crucible by calling add() or wait until LOCKED, when
@@ -205,19 +225,19 @@ contract Crucible is Ownable {
     return commitments[_participant].exists;
   }
 
-  function count() public view returns(uint) {
+  function count() external view returns(uint) {
     return participants.length;
   }
 
   // add() will allow anyone to add themselves once to the contract.  It will
   // also alow the oracle to add a participant with the same unique constraint.
-  function add(address _participant) public payable {
-    require(
-      minimumAmount <= msg.value, "value must be at least minimumAmount"
-    );
+  function add(address _participant)
+    external
+    payable
+    inState(CrucibleState.OPEN) {
 
     require(
-      state == CrucibleState.OPEN, "can only add when in the open state"
+      minimumAmount <= msg.value, "value must be at least minimumAmount"
     );
 
     require(
@@ -241,11 +261,10 @@ contract Crucible is Ownable {
     emit FundsReceived(_participant, msg.value);
   }
 
-  function setGoal(address _participant, bool _metGoal) public onlyOwner {
-    require(
-      state == CrucibleState.LOCKED || state == CrucibleState.JUDGEMENT,
-      "can only setGoal when in LOCKED or JUDGEMENT state"
-    );
+  function setGoal(address _participant, bool _metGoal)
+    external
+    onlyOwner
+    inEitherState(CrucibleState.LOCKED, CrucibleState.JUDGEMENT) {
 
     require(
       participantExists(_participant) == true, "participant doesn't exist"
@@ -270,9 +289,8 @@ contract Crucible is Ownable {
     );
   }
 
-  function lock() public {
+  function lock() external inState(CrucibleState.OPEN) {
     require(lockDate <= now, 'can only moved to LOCKED state after lockDate');
-    require(state == CrucibleState.OPEN, 'state can only move OPEN -> LOCKED');
 
     // Reserve should perfectly match the crucible balance.  Move any amount
     // from balance that is greater than the reserve from balance to penalty.
@@ -288,31 +306,21 @@ contract Crucible is Ownable {
     emit CrucibleStateChange(CrucibleState.OPEN, CrucibleState.LOCKED);
   }
 
-  function judgement() public {
+  function judgement() external inState(CrucibleState.LOCKED) {
     require(endDate <= now, 'can only moved to JUDGEMENT state after endDate');
-    require(
-      state == CrucibleState.LOCKED, 'state can only move LOCKED -> JUDGEMENT'
-    );
 
     state = CrucibleState.JUDGEMENT;
     emit CrucibleStateChange(CrucibleState.LOCKED, CrucibleState.JUDGEMENT);
   }
 
-  function finish() public onlyOwner {
-    require(
-      state == CrucibleState.JUDGEMENT,
-      'state can only move JUDGEMENT -> FINISHED'
-    );
-
+  function finish() external onlyOwner inState(CrucibleState.JUDGEMENT) {
     state = CrucibleState.FINISHED;
     emit CrucibleStateChange(CrucibleState.JUDGEMENT, CrucibleState.FINISHED);
   }
 
-  function paid() public {
-    require(
-      state == CrucibleState.FINISHED || state == CrucibleState.BROKEN,
-      'state can only move (FINISHED | BROKEN) -> PAID'
-    );
+  function paid()
+    public
+    inEitherState(CrucibleState.FINISHED, CrucibleState.BROKEN) {
 
     // Check if we can move this crucible into the PAID state.  If balance is
     // 0 this is fairly straight forward; however, the oracle may not have
@@ -330,16 +338,15 @@ contract Crucible is Ownable {
     }
   }
 
-  function broken() public {
+  function broken()
+    external
+     inEitherState(CrucibleState.JUDGEMENT, CrucibleState.FINISHED)
+     notInState(CrucibleState.PAID) {
+
     require(
       (endDate + timeout) <= now,
       'can only moved to BROKEN state timeout seconds past endDate'
     );
-    require(
-      state == CrucibleState.JUDGEMENT || state == CrucibleState.FINISHED,
-      'can only move out of JUDGEMENT or FINISHED to BROKEN'
-    );
-    require(state != CrucibleState.PAID, 'sorry PAID is the final state');
 
     CrucibleState currentState = state;
 
@@ -350,11 +357,10 @@ contract Crucible is Ownable {
   // payout() will process as many records in participants[] as specified and
   // payout that many records.  This method may be called many times, and will
   // eventually move the crucible to the PAID state.
-  function payout(uint _startIndex, uint _records) public {
-    require(
-      state == CrucibleState.FINISHED || state == CrucibleState.BROKEN,
-      'can only payout if in FINISHED or BROKEN state'
-    );
+  function payout(uint _startIndex, uint _records)
+    public
+    inEitherState(CrucibleState.FINISHED, CrucibleState.BROKEN) {
+
     require(_records > 0, 'cannot request 0 records');
 
     // bound check and normalize _start
@@ -377,7 +383,7 @@ contract Crucible is Ownable {
     paid();
   }
 
-  function collectFee(address _destination) public onlyOwner {
+  function collectFee(address _destination) external onlyOwner {
     require(
       state == CrucibleState.FINISHED ||
       state == CrucibleState.BROKEN ||
