@@ -3,6 +3,7 @@ const Address = require('../../fixtures/address');
 const { expectThrow } = require('../../fixtures/expectThrow');
 const { EVMRevert } = require('../../fixtures/EVMRevert');
 const truffleAssert = require('truffle-assertions');
+const abi = require('ethereumjs-abi')
 
 const Crucible = artifacts.require("./Crucible.sol");
 
@@ -212,7 +213,7 @@ contract('Crucible - base', async (accounts) => {
     assert.equal(released.toNumber(), 0, 'released is 0');
   });
 
-  it('payable function works', async () => {
+  it('payable fallback function works', async () => {
     var balance = await web3.eth.getBalance(crucible.address);
     assert.equal(balance.toNumber(), 0, 'balance is 0');
 
@@ -226,7 +227,7 @@ contract('Crucible - base', async (accounts) => {
     assert.equal( balance.toNumber(), cu.tooLowAmountWei, 'balance is .01 ETH');
   });
 
-  it('payable function emits event', async () => {
+  it('payable fallback function emits event', async () => {
     var tx = await web3.eth.sendTransaction({
       from: address.owner,
       to: crucible.address,
@@ -240,7 +241,7 @@ contract('Crucible - base', async (accounts) => {
     }, 'event fired and fromAddress and amount are correct');
   });
 
-  it('payable stays under gas stipend of 2,300', async () => {
+  it('payable fallback stays under gas stipend of 2,300', async () => {
     var tx = await web3.eth.sendTransaction({
       from: address.owner,
       to: crucible.address,
@@ -250,7 +251,7 @@ contract('Crucible - base', async (accounts) => {
     cu.assertTxUnderGasStipend(tx);
   });
 
-  it('payable only works while OPEN', async () => {
+  it('payable fallback only works while OPEN', async () => {
     crucible = await Crucible.new(
       address.oracle,
       'test',
@@ -271,17 +272,37 @@ contract('Crucible - base', async (accounts) => {
     assert(cu.crucibleStateIsLocked(state), 'crucible is in the LOCKED state');
 
     try {
-      // lame, for some reason expectThrow() can't catch this one.  I just
-      // did it with try/catch because it was quicker.
       await web3.eth.sendTransaction({
         from: address.owner,
         to: crucible.address,
         value: cu.tooLowAmountWei,
       });
-      assert.isOk(false, 'transaction should revert');
+      assert(false, 'did not throw an error');
     } catch (err) {
-      assert.isOk(true, 'transaction should revert');
+      assert.equal(
+        err.message,
+        'VM Exception while processing transaction: revert',
+        'fallback function should revert since we are not in OPEN state'
+      );
     }
   });
+
+//  TODO(godsflaw): at some point, figure out how to invoke the fallback
+//  function in the contract with data so that we can tests that data.length
+//  is 0 throws.
+//
+//  it('payable fallback only works with zero data length', async () => {
+//    var type = ["string"];
+//    var value = ["test"];
+//
+//    var encoded = abi.rawEncode(type, value);
+//
+//    await expectThrow(web3.eth.sendTransaction({
+//      from: address.owner,
+//      to: crucible.address,
+//      value: cu.tooLowAmountWei,
+//      data: encoded,
+//    }), EVMRevert);
+//  });
 
 });

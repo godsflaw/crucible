@@ -66,12 +66,7 @@ contract('Crucible - kill', async (accounts) => {
 
     await crucible.kill({ from: address.oracle });
 
-    try {
-      owner = await crucible.owner();
-      assert.isOk(false, 'contract should be dead');
-    } catch (err) {
-      assert.isOk(true, 'contract is dead');
-    }
+    await expectThrow(crucible.owner());
   });
 
   it('kill will not call selfdestruct on the contract', async () => {

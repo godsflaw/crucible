@@ -15,12 +15,13 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "chai": "^4.1.2",
+    "ethereumjs-abi": "^0.6.5",
     "lite-server": "^2.3.0",
     "truffle-assertions": "^0.4.0"
   },
   "dependencies": {
     "bip39": "^2.4.0",
-    "chai": "^4.1.2",
     "ethereumjs-wallet": "^0.6.0",
     "node-vault": "^0.6.1",
     "openzeppelin-solidity": "^1.10.0",

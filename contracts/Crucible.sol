@@ -100,6 +100,7 @@ contract Crucible is Ownable {
   }
 
   function () external payable {
+    require(msg.data.length == 0);
     require(
       state == CrucibleState.OPEN,
       'crucible only accepts funds while state is OPEN'
@@ -319,6 +320,8 @@ contract Crucible is Ownable {
     // the logic in this condition is checking for, then we will move to the
     // PAID state so that the contract can be killed and and let selfdestruct()
     // return the fee to the owner.
+    // TODO(godsflaw): apparently, one can still send money to the contract
+    // so this second check won't work... fix it.
     if (address(this).balance == 0 ||
        (!(feePaid) && address(this).balance == fee)) {
       CrucibleState currentState = state;
