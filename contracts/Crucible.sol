@@ -237,14 +237,17 @@ contract Crucible is Ownable {
     return commitments[_participant].exists;
   }
 
+  //TODO(godsflaw): test this
   function canPayFee() public view returns(bool) {
     return (!(feePaid) && fee > 0);
   }
 
+  //TODO(godsflaw): test this
   function hasBeneficiary() public view returns(bool) {
     return (beneficiary != address(0x0));
   }
 
+  //TODO(godsflaw): test this
   function canPayBeneficiary() public view returns(bool) {
     return (hasBeneficiary() && !(penaltyPaid) && penalty > 0);
   }
@@ -294,7 +297,6 @@ contract Crucible is Ownable {
       participantExists(_participant) == true, "participant doesn't exist"
     );
 
-    // TODO(godsflaw): test me
     require(
       commitments[_participant].metGoal == GoalState.WAITING,
       "participant already set"

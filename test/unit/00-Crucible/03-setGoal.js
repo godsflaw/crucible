@@ -220,4 +220,28 @@ contract('Crucible - setGoal', async (accounts) => {
     ), EVMRevert);
   });
 
+  it('setGoal can only be called once for each paticipant', async () => {
+    await cu.sleep(1000);
+    var tx = await crucible.lock.sendTransaction({ 'from': address.oracle });
+
+    tx = await crucible.setGoal(
+      address.user1, true, { 'from': address.oracle }
+    );
+
+    tx = await crucible.setGoal(
+      address.user2, false, { 'from': address.oracle }
+    );
+
+    for (var i = 1; i <= 2; i++) {
+      await expectThrow(crucible.setGoal.sendTransaction(
+        address['user' + i], true, { 'from': address.oracle }
+      ), EVMRevert);
+
+      await expectThrow(crucible.setGoal.sendTransaction(
+        address['user' + i], false, { 'from': address.oracle }
+      ), EVMRevert);
+    }
+
+  });
+
 });
