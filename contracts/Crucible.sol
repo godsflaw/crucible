@@ -7,9 +7,10 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 contract Crucible is Ownable {
   using SafeMath for uint256;
 
-  string public name;
+  address public beneficiary;
   bool public calculateFee = false;
   bool public feePaid = false;
+  bool public penaltyPaid = false;
   uint public startDate;
   uint public lockDate;
   uint public endDate;
@@ -33,7 +34,8 @@ contract Crucible is Ownable {
     JUDGEMENT,
     FINISHED,
     PAID,
-    BROKEN
+    BROKEN,
+    KILLED
   }
 
   enum GoalState {
@@ -50,6 +52,7 @@ contract Crucible is Ownable {
 
   // event Debug(string msg, uint256 data);
   event FeeSent(address recipient, uint256 amount);
+  event PenaltySent(address recipient, uint256 amount);
   event PaymentSent(address recipient, uint256 amount);
   event RefundSent(address recipient, uint256 amount);
   event FundsReceived(address fromAddress, uint256 amount);
@@ -59,14 +62,16 @@ contract Crucible is Ownable {
     address participant, GoalState fromState, GoalState toState
   );
 
-  constructor(address _owner, string _name, uint _startDate, uint _lockDate, uint _endDate, uint256 _minimumAmount, uint _timeout, uint256 _feeNumerator) public {
-    name = _name;
-
+  constructor(address _owner, address _beneficiary, uint _startDate, uint _lockDate, uint _endDate, uint256 _minimumAmount, uint _timeout, uint256 _feeNumerator) public {
     if (_owner == address(0x0)) {
       owner = msg.sender;
     } else {
       owner = _owner;
     }
+
+    // set this if the penalty should be sent to a third party and not the pool
+    // TODO(godsflaw): test me
+    beneficiary = _beneficiary;
 
     require(
       _startDate < _lockDate && _lockDate < _endDate,
@@ -134,7 +139,8 @@ contract Crucible is Ownable {
 
   function kill() external onlyOwner {
     if (state == CrucibleState.PAID) {
-      // TODO(godsflaw): clean up Foundry?
+      // TODO(godsflaw): test that we emit this
+      emit CrucibleStateChange(state, CrucibleState.KILLED);
       selfdestruct(owner);
     }
   }
@@ -149,22 +155,21 @@ contract Crucible is Ownable {
     }
 
     // if we have participants and all failed, then fee is the entire balance
-    if (passCount == 0) {
+    // TODO(godsflaw): test this
+    if (passCount == 0 && !(hasBeneficiary())) {
       fee = penalty;
     } else {
       fee = penalty.mul(feeNumerator).div(feeDenominator);
     }
 
-    if (fee == 0) {
-      feePaid = true;
-    } else {
-      penalty = penalty.sub(fee);
-    }
+    penalty = penalty.sub(fee);
 
     calculateFee = true;
   }
 
   function _processPayouts(uint _startIndex, uint _records) internal {
+    uint256 bonus;
+
     for (uint i = _startIndex; i < (_startIndex + _records); i++) {
       address participant = participants[i];
 
@@ -182,9 +187,16 @@ contract Crucible is Ownable {
             .sub(reserve)
             .sub(fee.add(penalty));
 
-          uint256 bonus = penalty
-            .mul(commitments[participant].amount)
-            .div(totalFunds);
+          // TODO(godsflaw): test me
+          if (hasBeneficiary()) {
+            // the entire penalty goes to the beneficiary
+            bonus = 0;
+          } else {
+            // calculate a pooled bonus
+            bonus = penalty
+              .mul(commitments[participant].amount)
+              .div(totalFunds);
+          }
 
           uint256 payment = commitments[participant].amount.add(bonus);
 
@@ -223,6 +235,18 @@ contract Crucible is Ownable {
 
   function participantExists(address _participant) public view returns(bool) {
     return commitments[_participant].exists;
+  }
+
+  function canPayFee() public view returns(bool) {
+    return (!(feePaid) && fee > 0);
+  }
+
+  function hasBeneficiary() public view returns(bool) {
+    return (beneficiary != address(0x0));
+  }
+
+  function canPayBeneficiary() public view returns(bool) {
+    return (hasBeneficiary() && !(penaltyPaid) && penalty > 0);
   }
 
   function count() external view returns(uint) {
@@ -268,6 +292,12 @@ contract Crucible is Ownable {
 
     require(
       participantExists(_participant) == true, "participant doesn't exist"
+    );
+
+    // TODO(godsflaw): test me
+    require(
+      commitments[_participant].metGoal == GoalState.WAITING,
+      "participant already set"
     );
 
     uint256 amount = commitments[_participant].amount;
@@ -331,7 +361,7 @@ contract Crucible is Ownable {
     // TODO(godsflaw): apparently, one can still send money to the contract
     // so this second check won't work... fix it.
     if (address(this).balance == 0 ||
-       (!(feePaid) && address(this).balance == fee)) {
+       (canPayFee() && address(this).balance == fee)) {
       CrucibleState currentState = state;
       state = CrucibleState.PAID;
       emit CrucibleStateChange(currentState, CrucibleState.PAID);
@@ -393,10 +423,17 @@ contract Crucible is Ownable {
 
     _calculateFee();
 
-    if (!(feePaid) && _destination.send(fee)) {
+    if (canPayFee() && _destination.send(fee)) {
       released = released.add(fee);
       feePaid = true;
       emit FeeSent(_destination, fee);
+    }
+
+    // TODO(godsflaw): test this
+    if (canPayBeneficiary() && beneficiary.send(penalty)) {
+      released = released.add(penalty);
+      penaltyPaid = true;
+      emit PenaltySent(beneficiary, penalty);
     }
 
     // If not already in the PAID state, possibly move to the paid state.

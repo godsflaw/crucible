@@ -17,7 +17,7 @@ contract('Crucible - lock', async (accounts) => {
 
     crucible = await Crucible.new(
       address.oracle,
-      'test',
+      address.empty,
       cu.startDate(),
       cu.lockDate(2),
       cu.endDate(10),

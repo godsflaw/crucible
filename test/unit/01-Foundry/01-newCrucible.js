@@ -25,7 +25,7 @@ contract('Foundry - newCrucible', async (accounts) => {
 
     var tx = await foundry.newCrucible(
       address.oracle,
-      'deadbeef',
+      address.empty,
       cu.startDate(),
       cu.lockDate(),
       cu.endDate(),
@@ -43,12 +43,12 @@ contract('Foundry - newCrucible', async (accounts) => {
       owner, address.oracle, 'got crucible owner: ' + address.oracle
     );
 
-    var name = await crucible.name.call();
-    assert.equal(name.toString(), 'deadbeef', 'got crucible name');
+    var beneficiary = await crucible.beneficiary.call();
+    assert.equal(beneficiary, address.empty, 'got crucible beneficiary');
 
     // try to get at the new contract from index 0 in the array.
     owner = undefined;
-    name = undefined;
+    beneficiary = undefined;
     crucible = undefined;
 
     var result = await foundry.getCount.call();
@@ -61,7 +61,7 @@ contract('Foundry - newCrucible', async (accounts) => {
       owner, address.oracle, 'got crucible owner: ' + address.oracle
     );
 
-    name = await crucible.name.call();
-    assert.equal(name.toString(), 'deadbeef', 'got crucible name');
+    beneficiary = await crucible.beneficiary.call();
+    assert.equal(beneficiary, address.empty, 'got crucible beneficiary');
   });
 });

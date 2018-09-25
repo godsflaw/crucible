@@ -23,7 +23,7 @@ contract('Crucible - collectFee', async (accounts) => {
 
     crucible = await Crucible.new(
       address.oracle,
-      'test',
+      address.empty,
       cu.startDate(),
       cu.lockDate(2),
       cu.endDate(4),
@@ -79,6 +79,9 @@ contract('Crucible - collectFee', async (accounts) => {
 
     // NOTE: we left user3 in WAITING state
 
+    var feePaid = await crucible.feePaid.call();
+    assert.equal(feePaid, false, 'feePaid correct');
+
     // trigger fee payout
     tx = await crucible.collectFee.sendTransaction(
       address.oracle, { 'from': address.oracle }
@@ -87,6 +90,9 @@ contract('Crucible - collectFee', async (accounts) => {
 
     // The correct fee is was sent to the oracle
     cu.assertEventSent(evdata, 'FeeSent', address.oracle, fee);
+
+    feePaid = await crucible.feePaid.call();
+    assert.equal(feePaid, true, 'feePaid correct');
 
     // state did not change
     truffleAssert.eventNotEmitted(evdata, 'CrucibleStateChange');
@@ -111,6 +117,9 @@ contract('Crucible - collectFee', async (accounts) => {
 
     // NOTE: we left user1 in WAITING state
 
+    var feePaid = await crucible.feePaid.call();
+    assert.equal(feePaid, false, 'feePaid correct');
+
     // trigger fee payout
     tx = await crucible.collectFee.sendTransaction(
       address.oracle, { 'from': address.oracle }
@@ -124,6 +133,9 @@ contract('Crucible - collectFee', async (accounts) => {
       address.oracle,
       cu.riskAmountWei.times(2)
     );
+
+    feePaid = await crucible.feePaid.call();
+    assert.equal(feePaid, true, 'feePaid correct');
 
     // state did not change
     truffleAssert.eventNotEmitted(evdata, 'CrucibleStateChange');
@@ -143,11 +155,17 @@ contract('Crucible - collectFee', async (accounts) => {
 
     tx = await crucible.finish.sendTransaction({ 'from': address.oracle });
 
+    var feePaid = await crucible.feePaid.call();
+    assert.equal(feePaid, false, 'feePaid correct');
+
     // trigger fee payout
     tx = await crucible.collectFee.sendTransaction(
       address.oracle, { 'from': address.oracle }
     );
     var evdata = await truffleAssert.createTransactionResult(crucible, tx);
+
+    feePaid = await crucible.feePaid.call();
+    assert.equal(feePaid, false, 'feePaid correct');
 
     // no fee to pay
     truffleAssert.eventNotEmitted(evdata, 'FeeSent');
@@ -164,6 +182,9 @@ contract('Crucible - collectFee', async (accounts) => {
 
     // NOTE: we left all participants in the waiting state
 
+    var feePaid = await crucible.feePaid.call();
+    assert.equal(feePaid, false, 'feePaid correct');
+
     // trigger fee payout
     tx = await crucible.collectFee.sendTransaction(
       address.oracle, { 'from': address.oracle }
@@ -172,6 +193,9 @@ contract('Crucible - collectFee', async (accounts) => {
 
     // no fee to pay
     truffleAssert.eventNotEmitted(evdata, 'FeeSent');
+
+    feePaid = await crucible.feePaid.call();
+    assert.equal(feePaid, false, 'feePaid correct');
 
     // state did not change
     truffleAssert.eventNotEmitted(evdata, 'CrucibleStateChange');
@@ -191,6 +215,9 @@ contract('Crucible - collectFee', async (accounts) => {
 
     tx = await crucible.finish.sendTransaction({ 'from': address.oracle });
 
+    var feePaid = await crucible.feePaid.call();
+    assert.equal(feePaid, false, 'feePaid correct');
+
     // trigger fee payout
     tx = await crucible.collectFee.sendTransaction(
       address.oracle, { 'from': address.oracle }
@@ -201,6 +228,9 @@ contract('Crucible - collectFee', async (accounts) => {
     cu.assertEventSent(
       evdata, 'FeeSent', address.oracle, cu.riskAmountWei.times(3)
     );
+
+    feePaid = await crucible.feePaid.call();
+    assert.equal(feePaid, true, 'feePaid correct');
 
     // We are in the paid state, and got the event
     await cu.assertCrucibleState(
@@ -236,6 +266,9 @@ contract('Crucible - collectFee', async (accounts) => {
       0, 3, { 'from': address.oracle }
     );
 
+    var feePaid = await crucible.feePaid.call();
+    assert.equal(feePaid, false, 'feePaid correct');
+
     // trigger fee payout
     tx = await crucible.collectFee.sendTransaction(
       address.oracle, { 'from': address.oracle }
@@ -244,6 +277,9 @@ contract('Crucible - collectFee', async (accounts) => {
 
     // The correct fee is was sent to the oracle
     cu.assertEventSent(evdata, 'FeeSent', address.oracle, fee);
+
+    feePaid = await crucible.feePaid.call();
+    assert.equal(feePaid, true, 'feePaid correct');
   });
 
   it('fees correct after payout for WAITING, FAIL, and FAIL', async () => {
@@ -270,6 +306,9 @@ contract('Crucible - collectFee', async (accounts) => {
       0, 3, { 'from': address.oracle }
     );
 
+    var feePaid = await crucible.feePaid.call();
+    assert.equal(feePaid, false, 'feePaid correct');
+
     // trigger fee payout
     tx = await crucible.collectFee.sendTransaction(
       address.oracle, { 'from': address.oracle }
@@ -283,6 +322,9 @@ contract('Crucible - collectFee', async (accounts) => {
       address.oracle,
       cu.riskAmountWei.times(2)
     );
+
+    feePaid = await crucible.feePaid.call();
+    assert.equal(feePaid, true, 'feePaid correct');
   });
 
   it('fees correct after payout if all in PASS state', async () => {
@@ -304,6 +346,9 @@ contract('Crucible - collectFee', async (accounts) => {
       0, 3, { 'from': address.oracle }
     );
 
+    var feePaid = await crucible.feePaid.call();
+    assert.equal(feePaid, false, 'feePaid correct');
+
     // trigger fee payout
     tx = await crucible.collectFee.sendTransaction(
       address.oracle, { 'from': address.oracle }
@@ -312,6 +357,9 @@ contract('Crucible - collectFee', async (accounts) => {
 
     // no fee to pay
     truffleAssert.eventNotEmitted(evdata, 'FeeSent');
+
+    feePaid = await crucible.feePaid.call();
+    assert.equal(feePaid, false, 'feePaid correct');
   });
 
   it('fees correct after payout if all in WAITING state', async () => {
@@ -327,6 +375,9 @@ contract('Crucible - collectFee', async (accounts) => {
       0, 3, { 'from': address.oracle }
     );
 
+    var feePaid = await crucible.feePaid.call();
+    assert.equal(feePaid, false, 'feePaid correct');
+
     // trigger fee payout
     tx = await crucible.collectFee.sendTransaction(
       address.oracle, { 'from': address.oracle }
@@ -335,6 +386,9 @@ contract('Crucible - collectFee', async (accounts) => {
 
     // no fee to pay
     truffleAssert.eventNotEmitted(evdata, 'FeeSent');
+
+    feePaid = await crucible.feePaid.call();
+    assert.equal(feePaid, false, 'feePaid correct');
   });
 
   it('fees correct after payout if all in FAIL state', async () => {
@@ -356,16 +410,17 @@ contract('Crucible - collectFee', async (accounts) => {
       0, 3, { 'from': address.oracle }
     );
 
+    var feePaid = await crucible.feePaid.call();
+    assert.equal(feePaid, false, 'feePaid correct');
+
     // trigger fee payout
     tx = await crucible.collectFee.sendTransaction(
       address.oracle, { 'from': address.oracle }
     );
     var evdata = await truffleAssert.createTransactionResult(crucible, tx);
 
-    // The correct fee is was sent to the oracle
-    cu.assertEventSent(
-      evdata, 'FeeSent', address.oracle, cu.riskAmountWei.times(3)
-    );
+    feePaid = await crucible.feePaid.call();
+    assert.equal(feePaid, true, 'feePaid correct');
   });
 
   it('fees are correct in partial payout PASS, FAIL, and WAITING', async () => {
@@ -393,6 +448,9 @@ contract('Crucible - collectFee', async (accounts) => {
     );
     var evdata = await truffleAssert.createTransactionResult(crucible, tx);
 
+    var feePaid = await crucible.feePaid.call();
+    assert.equal(feePaid, false, 'feePaid correct');
+
     // trigger fee payout
     tx = await crucible.collectFee.sendTransaction(
       address.oracle, { 'from': address.oracle }
@@ -401,6 +459,9 @@ contract('Crucible - collectFee', async (accounts) => {
 
     // The correct fee is was sent to the oracle
     cu.assertEventSent(evdata, 'FeeSent', address.oracle, fee);
+
+    feePaid = await crucible.feePaid.call();
+    assert.equal(feePaid, true, 'feePaid correct');
   });
 
   it('fees are correct in partial payout in PASS state', async () => {
@@ -417,6 +478,9 @@ contract('Crucible - collectFee', async (accounts) => {
 
     tx = await crucible.finish.sendTransaction({ 'from': address.oracle });
 
+    var feePaid = await crucible.feePaid.call();
+    assert.equal(feePaid, false, 'feePaid correct');
+
     // trigger fee payout
     tx = await crucible.collectFee.sendTransaction(
       address.oracle, { 'from': address.oracle }
@@ -424,6 +488,9 @@ contract('Crucible - collectFee', async (accounts) => {
     evdata = await truffleAssert.createTransactionResult(crucible, tx);
 
     truffleAssert.eventNotEmitted(evdata, 'FeeSent');
+
+    feePaid = await crucible.feePaid.call();
+    assert.equal(feePaid, false, 'feePaid correct');
   });
 
   it('fees are correct in partial payout in WAITING state', async () => {
@@ -434,6 +501,9 @@ contract('Crucible - collectFee', async (accounts) => {
 
     // NOTE: we left all participants in the waiting state
 
+    var feePaid = await crucible.feePaid.call();
+    assert.equal(feePaid, false, 'feePaid correct');
+
     // trigger fee payout
     tx = await crucible.collectFee.sendTransaction(
       address.oracle, { 'from': address.oracle }
@@ -441,6 +511,9 @@ contract('Crucible - collectFee', async (accounts) => {
     evdata = await truffleAssert.createTransactionResult(crucible, tx);
 
     truffleAssert.eventNotEmitted(evdata, 'FeeSent');
+
+    feePaid = await crucible.feePaid.call();
+    assert.equal(feePaid, false, 'feePaid correct');
   });
 
   it('fees are correct in partial payout in FAIL state', async () => {
@@ -460,11 +533,17 @@ contract('Crucible - collectFee', async (accounts) => {
 
     tx = await crucible.finish.sendTransaction({ 'from': address.oracle });
 
+    var feePaid = await crucible.feePaid.call();
+    assert.equal(feePaid, false, 'feePaid correct');
+
     // trigger fee payout
     tx = await crucible.collectFee.sendTransaction(
       address.oracle, { 'from': address.oracle }
     );
     evdata = await truffleAssert.createTransactionResult(crucible, tx);
+
+    feePaid = await crucible.feePaid.call();
+    assert.equal(feePaid, true, 'feePaid correct');
 
     // The correct fee is was sent to the oracle
     cu.assertEventSent(
@@ -501,6 +580,9 @@ contract('Crucible - collectFee', async (accounts) => {
     );
     evdata = await truffleAssert.createTransactionResult(crucible, tx);
 
+    var feePaid = await crucible.feePaid.call();
+    assert.equal(feePaid, false, 'feePaid correct');
+
     // trigger fee payout
     tx = await crucible.collectFee.sendTransaction(
       address.oracle, { 'from': address.oracle }
@@ -508,9 +590,10 @@ contract('Crucible - collectFee', async (accounts) => {
     evdata = await truffleAssert.createTransactionResult(crucible, tx);
 
     // The correct fee is was sent to the oracle
-    cu.assertEventSent(
-      evdata, 'FeeSent', address.oracle, cu.riskAmountWei.times(3)
-    );
+    cu.assertEventSent(evdata, 'FeeSent', address.oracle, fee);
+
+    feePaid = await crucible.feePaid.call();
+    assert.equal(feePaid, true, 'feePaid correct');
   });
 
   it('call collectFee() many times, only pays once', async () => {
@@ -537,6 +620,9 @@ contract('Crucible - collectFee', async (accounts) => {
       0, 3, { 'from': address.oracle }
     );
 
+    var feePaid = await crucible.feePaid.call();
+    assert.equal(feePaid, false, 'feePaid correct');
+
     // trigger fee payout
     tx = await crucible.collectFee.sendTransaction(
       address.oracle, { 'from': address.oracle }
@@ -546,7 +632,13 @@ contract('Crucible - collectFee', async (accounts) => {
     // The correct fee is was sent to the oracle
     cu.assertEventSent(evdata, 'FeeSent', address.oracle, fee);
 
+    feePaid = await crucible.feePaid.call();
+    assert.equal(feePaid, true, 'feePaid correct');
+
     for (var i = 0; i < 3; i++) {
+      feePaid = await crucible.feePaid.call();
+      assert.equal(feePaid, true, 'feePaid correct');
+
       // trigger fee payout
       tx = await crucible.collectFee.sendTransaction(
         address.oracle, { 'from': address.oracle }

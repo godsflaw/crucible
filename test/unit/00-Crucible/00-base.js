@@ -25,7 +25,7 @@ contract('Crucible - base', async (accounts) => {
 
     crucible = await Crucible.new(
       address.oracle,
-      'test',
+      address.empty,
       startDate,
       lockDate,
       endDate,
@@ -48,7 +48,7 @@ contract('Crucible - base', async (accounts) => {
   it('verify the owner/oracle is set to msg.sender if 0x0', async () => {
     var crucible = await Crucible.new(
       address.empty,
-      'empty',
+      address.empty,
       cu.startDate(),
       cu.lockDate(),
       cu.endDate(),
@@ -63,9 +63,9 @@ contract('Crucible - base', async (accounts) => {
     );
   });
 
-  it('verify the name is set', async () => {
-    var name = await crucible.name.call();
-    assert.equal(name, 'test', 'name = test expected');
+  it('verify the beneficiary is set', async () => {
+    var beneficiary = await crucible.beneficiary.call();
+    assert.equal(beneficiary, address.empty, 'beneficiary as expected');
   });
 
   it('verify passCount is set', async () => {
@@ -81,6 +81,11 @@ contract('Crucible - base', async (accounts) => {
   it('verify feePaid is set', async () => {
     var feePaid = await crucible.feePaid.call();
     assert.equal(feePaid, false, 'feePaid is false');
+  });
+
+  it('verify penaltyPaid is set', async () => {
+    var penaltyPaid = await crucible.penaltyPaid.call();
+    assert.equal(penaltyPaid, false, 'penaltyPaid is false');
   });
 
   it('verify timeout is set', async () => {
@@ -136,7 +141,7 @@ contract('Crucible - base', async (accounts) => {
   it('startDate must be less than lockDate', async () => {
     await expectThrow(Crucible.new(
       address.oracle,
-      'cu.startDate() test',
+      address.empty,
       cu.lockDate(),
       cu.startDate(),
       cu.endDate(),
@@ -150,7 +155,7 @@ contract('Crucible - base', async (accounts) => {
   it('lockDate must be less than endDate', async () => {
     await expectThrow(Crucible.new(
       address.oracle,
-      'cu.startDate() test',
+      address.empty,
       cu.startDate(),
       cu.endDate(),
       cu.lockDate(),
@@ -164,7 +169,7 @@ contract('Crucible - base', async (accounts) => {
   it('startDate must be less than endDate', async () => {
     await expectThrow(Crucible.new(
       address.oracle,
-      'cu.startDate() test',
+      address.empty,
       cu.endDate(),
       cu.lockDate(),
       cu.startDate(),
@@ -178,7 +183,7 @@ contract('Crucible - base', async (accounts) => {
   it('minimumAmount must be greater than 0', async () => {
     await expectThrow(Crucible.new(
       address.oracle,
-      'cu.startDate() test',
+      address.empty,
       cu.endDate(),
       cu.lockDate(),
       cu.startDate(),
@@ -192,7 +197,7 @@ contract('Crucible - base', async (accounts) => {
   it('timeout must be greater than to (endDate - startDate)', async () => {
     await expectThrow(Crucible.new(
       address.oracle,
-      'cu.startDate() test',
+      address.empty,
       cu.endDate(),
       cu.lockDate(),
       cu.startDate(),
@@ -254,7 +259,7 @@ contract('Crucible - base', async (accounts) => {
   it('payable fallback only works while OPEN', async () => {
     crucible = await Crucible.new(
       address.oracle,
-      'test',
+      address.empty,
       cu.startDate(),
       cu.lockDate(1),
       cu.endDate(3),

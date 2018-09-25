@@ -19,6 +19,7 @@ var CrucibleState = Object.freeze({
   'FINISHED':4,
   'PAID':5,
   'BROKEN':6,
+  'KILLED':7,
 });
 
 function CrucibleUtils(options) {
@@ -208,6 +209,14 @@ CrucibleUtils.prototype.crucibleStateIsPaid = function (state) {
 
 CrucibleUtils.prototype.crucibleStateIsBroken = function (state) {
   if (this.getCrucibleState(state) === CrucibleState.BROKEN) {
+    return true;
+  }
+
+  return false;
+};
+
+CrucibleUtils.prototype.crucibleStateIsKilled = function (state) {
+  if (this.getCrucibleState(state) === CrucibleState.KILLED) {
     return true;
   }
 

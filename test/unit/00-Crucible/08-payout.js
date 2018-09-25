@@ -23,7 +23,7 @@ contract('Crucible - payout', async (accounts) => {
 
     crucible = await Crucible.new(
       address.oracle,
-      'test',
+      address.empty,
       cu.startDate(),
       cu.lockDate(2),
       cu.endDate(4),
@@ -886,7 +886,7 @@ contract('Crucible - payout', async (accounts) => {
     for (var x = 0; x < 5; x++) {
       crucible = await Crucible.new(
         address.oracle,
-        'test',
+        address.empty,
         cu.startDate(),
         cu.lockDate(2),
         cu.endDate(4),
@@ -986,7 +986,7 @@ contract('Crucible - payout', async (accounts) => {
 
     crucible = await Crucible.new(
       address.oracle,
-      'test',
+      address.empty,
       cu.startDate(),
       cu.lockDate(2),
       cu.endDate(4),
@@ -1036,7 +1036,7 @@ contract('Crucible - payout', async (accounts) => {
 
     crucible = await Crucible.new(
       address.oracle,
-      'test',
+      address.empty,
       cu.startDate(),
       cu.lockDate(2),
       cu.endDate(4),

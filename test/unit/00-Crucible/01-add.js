@@ -17,7 +17,7 @@ contract('Crucible - add', async (accounts) => {
 
     crucible = await Crucible.new(
       address.oracle,
-      'test',
+      address.empty,
       cu.startDate(),
       cu.lockDate(),
       cu.endDate(),
@@ -149,7 +149,7 @@ contract('Crucible - add', async (accounts) => {
   it('cannot add user in locked state', async () => {
     crucible = await Crucible.new(
       address.oracle,
-      'test',
+      address.empty,
       cu.startDate(),
       cu.lockDate(1),
       cu.endDate(3),

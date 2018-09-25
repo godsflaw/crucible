@@ -30,7 +30,7 @@ contract('Foundry - getCount', async (accounts) => {
   it('new Crucible count is correct', async () => {
     await foundry.newCrucible(
       address.oracle,
-      'test01',
+      address.empty,
       cu.startDate(),
       cu.lockDate(),
       cu.endDate(),
@@ -41,7 +41,7 @@ contract('Foundry - getCount', async (accounts) => {
 
     await foundry.newCrucible(
       address.oracle,
-      'test02',
+      address.empty,
       cu.startDate(),
       cu.lockDate(),
       cu.endDate(),
@@ -56,7 +56,7 @@ contract('Foundry - getCount', async (accounts) => {
 
     await foundry.newCrucible(
       address.oracle,
-      'test03',
+      address.empty,
       cu.startDate(),
       cu.lockDate(),
       cu.endDate(),
