@@ -160,6 +160,9 @@ CrucibleUtils.prototype.getCrucibleState = function (_state) {
     case 5:
       state = CrucibleState.BROKEN;
       break;
+    case 6:
+      state = CrucibleState.KILLED;
+      break;
     default:
       state = CrucibleState.OPEN;
   }

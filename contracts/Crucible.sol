@@ -139,7 +139,6 @@ contract Crucible is Ownable {
 
   function kill() external onlyOwner {
     if (state == CrucibleState.PAID) {
-      // TODO(godsflaw): test that we emit this
       emit CrucibleStateChange(state, CrucibleState.KILLED);
       selfdestruct(owner);
     }

@@ -69,6 +69,22 @@ contract('Crucible - kill', async (accounts) => {
     await expectThrow(crucible.owner());
   });
 
+  it('kill calls emits CrucibleStateChange KILLED', async () => {
+    var tx = await crucible.payout.sendTransaction(
+      0, 3, { 'from': address.oracle }
+    );
+
+    var owner = await crucible.owner();
+    assert.equal(owner, address.oracle, 'crucible.owner is the oralce');
+
+    tx = await crucible.kill({ from: address.oracle });
+
+    truffleAssert.eventEmitted(tx, 'CrucibleStateChange', (ev) => {
+      return cu.crucibleStateIsPaid(ev.fromState) &&
+        cu.crucibleStateIsKilled(ev.toState);
+    }, 'fromState and toState are correct');
+  });
+
   it('kill will not call selfdestruct on the contract', async () => {
     var tx = await crucible.payout.sendTransaction(
       0, 2, { 'from': address.oracle }
