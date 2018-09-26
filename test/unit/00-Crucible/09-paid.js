@@ -52,8 +52,27 @@ contract('Crucible - paid', async (accounts) => {
     await crucible.kill({ from: address.oracle });
   });
 
-  it('payout can change crucible state to PAID', async () => {
+  it('payout + collectFee can change crucible state to PAID', async () => {
     var tx = await crucible.payout.sendTransaction(
+      0, 3, { 'from': address.oracle }
+    );
+
+    tx = await crucible.collectFee.sendTransaction(
+      address.oracle, { 'from': address.oracle }
+    );
+
+    var state = await crucible.state.call();
+    assert(
+      cu.crucibleStateIsPaid(state), 'crucible is in the PAID state'
+    );
+  });
+
+  it('collectFee + payout can change crucible state to PAID', async () => {
+    var tx = await crucible.collectFee.sendTransaction(
+      address.oracle, { 'from': address.oracle }
+    );
+
+    tx = await crucible.payout.sendTransaction(
       0, 3, { 'from': address.oracle }
     );
 
@@ -97,9 +116,28 @@ contract('Crucible - paid', async (accounts) => {
     );
   });
 
-  it('PAID state change emits event', async () => {
+  it('payout emits event state change event', async () => {
+    var tx = await crucible.collectFee(
+      address.oracle, { 'from': address.oracle }
+    );
+
+    tx = await crucible.payout(
+      0, 3, { 'from': address.oracle }
+    );
+
+    truffleAssert.eventEmitted(tx, 'CrucibleStateChange', (ev) => {
+      return cu.crucibleStateIsFinished(ev.fromState) &&
+        cu.crucibleStateIsPaid(ev.toState);
+    }, 'fromState and toState are correct');
+  });
+
+  it('collectFee emits event state change event', async () => {
     var tx = await crucible.payout(
       0, 3, { 'from': address.oracle }
+    );
+
+    tx = await crucible.collectFee(
+      address.oracle, { 'from': address.oracle }
     );
 
     truffleAssert.eventEmitted(tx, 'CrucibleStateChange', (ev) => {
@@ -117,6 +155,10 @@ contract('Crucible - paid', async (accounts) => {
   it('paid can change state from FINISHED to PAID', async () => {
     var tx = await crucible.payout.sendTransaction(
       0, 3, { 'from': address.oracle }
+    );
+
+    tx = await crucible.collectFee(
+      address.oracle, { 'from': address.oracle }
     );
 
     var state = await crucible.state.call();
@@ -143,6 +185,10 @@ contract('Crucible - paid', async (accounts) => {
 
     tx = await crucible.payout.sendTransaction(
       0, 3, { 'from': address.oracle }
+    );
+
+    tx = await crucible.collectFee(
+      address.oracle, { 'from': address.oracle }
     );
 
     state = await crucible.state.call();

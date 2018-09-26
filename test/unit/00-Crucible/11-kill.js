@@ -56,6 +56,10 @@ contract('Crucible - kill', async (accounts) => {
       0, 3, { 'from': address.oracle }
     );
 
+    tx = await crucible.collectFee.sendTransaction(
+      address.oracle, { 'from': address.oracle }
+    );
+
     var owner = await crucible.owner();
     assert.equal(owner, address.oracle, 'crucible.owner is the oralce');
 
@@ -74,6 +78,10 @@ contract('Crucible - kill', async (accounts) => {
       0, 3, { 'from': address.oracle }
     );
 
+    tx = await crucible.collectFee.sendTransaction(
+      address.oracle, { 'from': address.oracle }
+    );
+
     var owner = await crucible.owner();
     assert.equal(owner, address.oracle, 'crucible.owner is the oralce');
 
@@ -85,9 +93,32 @@ contract('Crucible - kill', async (accounts) => {
     }, 'fromState and toState are correct');
   });
 
-  it('kill will not call selfdestruct on the contract', async () => {
+  it('kill will not call selfdestruct w/ pending payout', async () => {
     var tx = await crucible.payout.sendTransaction(
-      0, 2, { 'from': address.oracle }
+      1, 2, { 'from': address.oracle }
+    );
+
+    tx = await crucible.collectFee.sendTransaction(
+      address.oracle, { 'from': address.oracle }
+    );
+
+    var owner = await crucible.owner();
+    assert.equal(owner, address.oracle, 'crucible.owner is the oralce');
+
+    var state = await crucible.state.call();
+    assert(
+      cu.crucibleStateIsFinished(state), 'crucible is in the FINISHED state'
+    );
+
+    await crucible.kill({ from: address.oracle });
+
+    owner = await crucible.owner();
+    assert.equal(owner, address.oracle, 'crucible.owner is still the oralce');
+  });
+
+  it('kill will not call selfdestruct w/ pending fee payout', async () => {
+    var tx = await crucible.payout.sendTransaction(
+      0, 3, { 'from': address.oracle }
     );
 
     var owner = await crucible.owner();

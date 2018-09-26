@@ -571,15 +571,7 @@ contract('Crucible - payout', async (accounts) => {
     // events NOT emitted
     truffleAssert.eventNotEmitted(evdata, 'PaymentSent');
     truffleAssert.eventNotEmitted(evdata, 'FeeSent');
-
-    // We are in the paid state, and got the event
-    await cu.assertCrucibleState(
-      crucible,
-      evdata,
-      'CrucibleStateChange',
-      cu.crucibleStateIsFinished,
-      cu.crucibleStateIsPaid
-    );
+    truffleAssert.eventNotEmitted(evdata, 'CrucibleStateChange');
 
     // balances after payout
     await cu.assertUserBalances(crucible, 0);
@@ -590,6 +582,15 @@ contract('Crucible - payout', async (accounts) => {
       address.oracle, { 'from': address.oracle }
     );
     evdata = await truffleAssert.createTransactionResult(crucible, tx);
+
+    // We are in the paid state, and got the event
+    await cu.assertCrucibleState(
+      crucible,
+      evdata,
+      'CrucibleStateChange',
+      cu.crucibleStateIsFinished,
+      cu.crucibleStateIsPaid
+    );
 
     // The correct fee was sent to the oracle
     cu.assertEventSent(evdata, 'FeeSent', address.oracle, fee);
@@ -636,6 +637,15 @@ contract('Crucible - payout', async (accounts) => {
       truffleAssert.eventNotEmitted(evdata, 'RefundSent');
     }
 
+    // We are in the paid state, and got the event
+    await cu.assertCrucibleState(
+      crucible,
+      evdata,
+      'CrucibleStateChange',
+      cu.crucibleStateIsFinished,
+      cu.crucibleStateIsPaid
+    );
+
     // balances after payout
     await cu.assertBalanceZero(crucible);
 
@@ -650,25 +660,10 @@ contract('Crucible - payout', async (accounts) => {
       );
     }
 
-    // We are in the paid state, and got the event
-    await cu.assertCrucibleState(
-      crucible,
-      evdata,
-      'CrucibleStateChange',
-      cu.crucibleStateIsFinished,
-      cu.crucibleStateIsPaid
-    );
-
-    // trigger fee payout
-    tx = await crucible.collectFee.sendTransaction(
+    // fee payout should fail
+    await expectThrow(crucible.collectFee.sendTransaction(
       address.oracle, { 'from': address.oracle }
-    );
-    evdata = await truffleAssert.createTransactionResult(crucible, tx);
-
-    truffleAssert.eventNotEmitted(evdata, 'FeeSent');
-
-    // balances after fee payout
-    await cu.assertBalanceZero(crucible);
+    ), EVMRevert);
   });
 
   it('can partial payout with participants all in WAITING state', async () => {
@@ -718,6 +713,15 @@ contract('Crucible - payout', async (accounts) => {
       );
     }
 
+    // We are in the paid state, and got the event
+    await cu.assertCrucibleState(
+      crucible,
+      evdata,
+      'CrucibleStateChange',
+      cu.crucibleStateIsFinished,
+      cu.crucibleStateIsPaid
+    );
+
     // balances after payout
     await cu.assertBalanceZero(crucible);
 
@@ -732,28 +736,13 @@ contract('Crucible - payout', async (accounts) => {
       );
     }
 
-    // We are in the paid state, and got the event
-    await cu.assertCrucibleState(
-      crucible,
-      evdata,
-      'CrucibleStateChange',
-      cu.crucibleStateIsFinished,
-      cu.crucibleStateIsPaid
-    );
-
     reserve = await crucible.reserve();
     assert.equal(reserve.toNumber(), 0, 'reserve is 0 again');
 
-    // trigger fee payout
-    tx = await crucible.collectFee.sendTransaction(
+    // fee payout should fail
+    await expectThrow(crucible.collectFee.sendTransaction(
       address.oracle, { 'from': address.oracle }
-    );
-    evdata = await truffleAssert.createTransactionResult(crucible, tx);
-
-    truffleAssert.eventNotEmitted(evdata, 'FeeSent');
-
-    // balances after fee payout
-    await cu.assertBalanceZero(crucible);
+    ), EVMRevert);
   });
 
   it('can partial payout with participants all in FAIL state', async () => {
@@ -804,6 +793,7 @@ contract('Crucible - payout', async (accounts) => {
         truffleAssert.eventNotEmitted(evdata, 'FeeSent');
         truffleAssert.eventNotEmitted(evdata, 'RefundSent');
         truffleAssert.eventNotEmitted(evdata, 'PaymentSent');
+        truffleAssert.eventNotEmitted(evdata, 'CrucibleStateChange');
 
         // balances after payout
         await cu.assertUserBalances(crucible, 0);
@@ -819,15 +809,6 @@ contract('Crucible - payout', async (accounts) => {
               .toNumber()
           );
         }
-
-        // We are in the paid state, and got the event
-        await cu.assertCrucibleState(
-          crucible,
-          evdata,
-          'CrucibleStateChange',
-          cu.crucibleStateIsFinished,
-          cu.crucibleStateIsPaid
-        );
 
         // penalty is still where it was, we never
         penalty = await crucible.penalty();
@@ -850,6 +831,15 @@ contract('Crucible - payout', async (accounts) => {
       address.oracle, { 'from': address.oracle }
     );
     evdata = await truffleAssert.createTransactionResult(crucible, tx);
+
+    // We are in the paid state, and got the event
+    await cu.assertCrucibleState(
+      crucible,
+      evdata,
+      'CrucibleStateChange',
+      cu.crucibleStateIsFinished,
+      cu.crucibleStateIsPaid
+    );
 
     // The correct fee was sent to the oracle
     cu.assertEventSent(

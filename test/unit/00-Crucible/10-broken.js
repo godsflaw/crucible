@@ -167,6 +167,10 @@ contract('Crucible - broken', async (accounts) => {
       0, 3, { 'from': address.oracle }
     );
 
+    tx = await crucible.collectFee(
+      address.oracle, { 'from': address.oracle }
+    );
+
     var state = await crucible.state.call();
     assert(
       cu.crucibleStateIsPaid(state), 'crucible is in the PAID state'

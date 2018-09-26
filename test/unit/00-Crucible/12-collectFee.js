@@ -89,6 +89,7 @@ contract('Crucible - collectFee', async (accounts) => {
 
   afterEach(async () => {
     await crucible.kill({ from: address.oracle });
+    await crucibleB.kill({ from: address.oracle });
   });
 
   it('cannot collectFee in LOCKED state', async () => {
@@ -740,17 +741,10 @@ contract('Crucible - collectFee', async (accounts) => {
     var calculateFee = await crucible.calculateFee();
     assert.equal(calculateFee, true, '_calculateFee() run');
 
-    // trigger fee payout
-    tx = await crucible.collectFee.sendTransaction(
+    // payout put crucible in PAID state, so collectFee will throw
+    await expectThrow(crucible.collectFee.sendTransaction(
       address.oracle, { 'from': address.oracle }
-    );
-    var evdata = await truffleAssert.createTransactionResult(crucible, tx);
-
-    // no fee to pay
-    truffleAssert.eventNotEmitted(evdata, 'FeeSent');
-
-    var feePaid = await crucible.feePaid.call();
-    assert.equal(feePaid, false, 'feePaid correct');
+    ), EVMRevert);
   });
 
   it('good after payout if all in PASS state with beneficiary', async () => {
@@ -775,21 +769,10 @@ contract('Crucible - collectFee', async (accounts) => {
     var calculateFee = await crucibleB.calculateFee();
     assert.equal(calculateFee, true, '_calculateFee() run');
 
-    // trigger fee payout
-    tx = await crucibleB.collectFee.sendTransaction(
+    // payout put crucible in PAID state, so collectFee will throw
+    await expectThrow(crucibleB.collectFee.sendTransaction(
       address.oracle, { 'from': address.oracle }
-    );
-    var evdata = await truffleAssert.createTransactionResult(crucibleB, tx);
-
-    // no fee to pay
-    truffleAssert.eventNotEmitted(evdata, 'FeeSent');
-    truffleAssert.eventNotEmitted(evdata, 'PenaltySent');
-
-    var feePaid = await crucibleB.feePaid.call();
-    assert.equal(feePaid, false, 'feePaid correct');
-
-    var penaltyPaid = await crucibleB.penaltyPaid.call();
-    assert.equal(penaltyPaid, false, 'penaltyPaid correct');
+    ), EVMRevert);
   });
 
   it('good after payout if all in WAITING state', async () => {
@@ -808,17 +791,10 @@ contract('Crucible - collectFee', async (accounts) => {
     var calculateFee = await crucible.calculateFee();
     assert.equal(calculateFee, true, '_calculateFee() run');
 
-    // trigger fee payout
-    tx = await crucible.collectFee.sendTransaction(
+    // payout put crucible in PAID state, so collectFee will throw
+    await expectThrow(crucible.collectFee.sendTransaction(
       address.oracle, { 'from': address.oracle }
-    );
-    var evdata = await truffleAssert.createTransactionResult(crucible, tx);
-
-    // no fee to pay
-    truffleAssert.eventNotEmitted(evdata, 'FeeSent');
-
-    var feePaid = await crucible.feePaid.call();
-    assert.equal(feePaid, false, 'feePaid correct');
+    ), EVMRevert);
   });
 
   it('good after payout if all in WAITING state with beneficiary', async () => {
@@ -837,21 +813,10 @@ contract('Crucible - collectFee', async (accounts) => {
     var calculateFee = await crucibleB.calculateFee();
     assert.equal(calculateFee, true, '_calculateFee() run');
 
-    // trigger fee payout
-    tx = await crucibleB.collectFee.sendTransaction(
+    // payout put crucible in PAID state, so collectFee will throw
+    await expectThrow(crucibleB.collectFee.sendTransaction(
       address.oracle, { 'from': address.oracle }
-    );
-    var evdata = await truffleAssert.createTransactionResult(crucibleB, tx);
-
-    // no fee to pay
-    truffleAssert.eventNotEmitted(evdata, 'FeeSent');
-    truffleAssert.eventNotEmitted(evdata, 'PenaltySent');
-
-    var feePaid = await crucibleB.feePaid.call();
-    assert.equal(feePaid, false, 'feePaid correct');
-
-    var penaltyPaid = await crucibleB.penaltyPaid.call();
-    assert.equal(penaltyPaid, false, 'penaltyPaid correct');
+    ), EVMRevert);
   });
 
   it('good after payout if all in FAIL state', async () => {
@@ -1511,14 +1476,10 @@ contract('Crucible - collectFee', async (accounts) => {
       feePaid = await crucible.feePaid.call();
       assert.equal(feePaid, true, 'feePaid correct');
 
-      // trigger fee payout
-      tx = await crucible.collectFee.sendTransaction(
+      // payout put crucible in PAID state, so collectFee will throw
+      await expectThrow(crucible.collectFee.sendTransaction(
         address.oracle, { 'from': address.oracle }
-      );
-      evdata = await truffleAssert.createTransactionResult(crucible, tx);
-
-      // no FeeSent
-      truffleAssert.eventNotEmitted(evdata, 'FeeSent');
+      ), EVMRevert);
     }
   });
 
@@ -1576,15 +1537,10 @@ contract('Crucible - collectFee', async (accounts) => {
       feePaid = await crucibleB.feePaid.call();
       assert.equal(feePaid, true, 'feePaid correct');
 
-      // trigger fee payout
-      tx = await crucibleB.collectFee.sendTransaction(
+      // payout put crucible in PAID state, so collectFee will throw
+      await expectThrow(crucibleB.collectFee.sendTransaction(
         address.oracle, { 'from': address.oracle }
-      );
-      evdata = await truffleAssert.createTransactionResult(crucibleB, tx);
-
-      // no FeeSent
-      truffleAssert.eventNotEmitted(evdata, 'FeeSent');
-      truffleAssert.eventNotEmitted(evdata, 'PenaltySent');
+      ), EVMRevert);
     }
   });
 

@@ -237,7 +237,7 @@ contract Crucible is Ownable {
 
   //TODO(godsflaw): test this
   function canPayFee() public view returns(bool) {
-    return (!(feePaid) && fee > 0);
+    return (!(feePaid) && fee > 0 && address(this).balance >= fee);
   }
 
   //TODO(godsflaw): test this
@@ -247,7 +247,12 @@ contract Crucible is Ownable {
 
   //TODO(godsflaw): test this
   function canPayBeneficiary() public view returns(bool) {
-    return (hasBeneficiary() && !(penaltyPaid) && penalty > 0);
+    return (
+      hasBeneficiary() &&
+      !(penaltyPaid) &&
+      penalty > 0 &&
+      address(this).balance >= penalty
+    );
   }
 
   function count() external view returns(uint) {
@@ -352,17 +357,9 @@ contract Crucible is Ownable {
     public
     inEitherState(CrucibleState.FINISHED, CrucibleState.BROKEN) {
 
-    // Check if we can move this crucible into the PAID state.  If balance is
-    // 0 this is fairly straight forward; however, the oracle may not have
-    // taken the fee yet.  If this is the last thing pending, which is what
-    // the logic in this condition is checking for, then we will move to the
-    // PAID state so that the contract can be killed and and let selfdestruct()
-    // return the fee to the owner.
-    // TODO(godsflaw): consider beneficiary payout here.
     // TODO(godsflaw): apparently, one can still send money to the contract
-    // so this second check won't work... fix it.
-    if (address(this).balance == 0 ||
-       (canPayFee() && address(this).balance == fee)) {
+    // so we need to check our own tracked balance against released.
+    if (address(this).balance == 0) {
       CrucibleState currentState = state;
       state = CrucibleState.PAID;
       emit CrucibleStateChange(currentState, CrucibleState.PAID);
@@ -386,7 +383,7 @@ contract Crucible is Ownable {
   }
 
   // payout() will process as many records in participants[] as specified and
-  // payout that many records.  This method may be called many times, and will
+  // payout that many records.  This method may be called many times, and may
   // eventually move the crucible to the PAID state.
   function payout(uint _startIndex, uint _records)
     public
@@ -414,32 +411,32 @@ contract Crucible is Ownable {
     paid();
   }
 
-  function collectFee(address _destination) external onlyOwner {
-    require(
-      state == CrucibleState.FINISHED ||
-      state == CrucibleState.BROKEN ||
-      state == CrucibleState.PAID,
-      'can only payout if in FINISHED, BROKEN, or PAID state'
-    );
+
+  // collectFee() will payout any fees to _destination and any penalty to
+  // the beneficiary if appropriate.  This method may be called many times, and
+  // may eventually move the crucible to the PAID state.
+  function collectFee(address _destination)
+    external
+    onlyOwner
+    inEitherState(CrucibleState.FINISHED, CrucibleState.BROKEN) {
 
     _calculateFee();
 
+    // send the fee payment off if there is one
     if (canPayFee() && _destination.send(fee)) {
       released = released.add(fee);
       feePaid = true;
       emit FeeSent(_destination, fee);
     }
 
+    // send the beneficiary payment off if there is one
     if (canPayBeneficiary() && beneficiary.send(penalty)) {
       released = released.add(penalty);
       penaltyPaid = true;
       emit PenaltySent(beneficiary, penalty);
     }
 
-    // If not already in the PAID state, possibly move to the paid state.
-    // This catches the case where no commitment passes.
-    if (state != CrucibleState.PAID) {
-      paid();
-    }
+    // possibly move to the paid state
+    paid();
   }
 }
