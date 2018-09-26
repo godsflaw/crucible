@@ -63,6 +63,24 @@ contract('Crucible - base', async (accounts) => {
     );
   });
 
+  it('verify the beneficiary is set correctly', async () => {
+    var crucible = await Crucible.new(
+      address.oracle,
+      address.owner,
+      cu.startDate(),
+      cu.lockDate(),
+      cu.endDate(),
+      cu.minAmountWei,
+      cu.timeout,
+      cu.feeNumerator,
+      { from: address.oracle }
+    );
+    var beneficiary = await crucible.beneficiary.call();
+    assert.equal(
+      beneficiary, address.owner, 'beneficiary is: ' + address.owner
+    );
+  });
+
   it('verify the beneficiary is set', async () => {
     var beneficiary = await crucible.beneficiary.call();
     assert.equal(beneficiary, address.empty, 'beneficiary as expected');

@@ -89,7 +89,7 @@ contract('Crucible - payout', async (accounts) => {
     );
     var evdata = await truffleAssert.createTransactionResult(crucible, tx);
 
-    // The correct fee is was sent to the oracle
+    // The correct fee was sent to the oracle
     cu.assertEventSent(evdata, 'FeeSent', address.oracle, fee);
 
     // trigger payout
@@ -171,7 +171,7 @@ contract('Crucible - payout', async (accounts) => {
     );
     var evdata = await truffleAssert.createTransactionResult(crucible, tx);
 
-    // The correct fee is was sent to the oracle
+    // The correct fee was sent to the oracle
     cu.assertEventSent(evdata, 'FeeSent', address.oracle, fee);
 
     // trigger payout
@@ -253,7 +253,7 @@ contract('Crucible - payout', async (accounts) => {
     );
     var evdata = await truffleAssert.createTransactionResult(crucible, tx);
 
-    // The correct fee is was sent to the oracle
+    // The correct fee was sent to the oracle
     cu.assertEventSent(
       evdata,
       'FeeSent',
@@ -446,7 +446,7 @@ contract('Crucible - payout', async (accounts) => {
     );
     var evdata = await truffleAssert.createTransactionResult(crucible, tx);
 
-    // The correct fee is was sent to the oracle
+    // The correct fee was sent to the oracle
     cu.assertEventSent(
       evdata, 'FeeSent', address.oracle, cu.riskAmountWei.times(3)
     );
@@ -591,7 +591,7 @@ contract('Crucible - payout', async (accounts) => {
     );
     evdata = await truffleAssert.createTransactionResult(crucible, tx);
 
-    // The correct fee is was sent to the oracle
+    // The correct fee was sent to the oracle
     cu.assertEventSent(evdata, 'FeeSent', address.oracle, fee);
 
     // balances after fee payout
@@ -851,7 +851,7 @@ contract('Crucible - payout', async (accounts) => {
     );
     evdata = await truffleAssert.createTransactionResult(crucible, tx);
 
-    // The correct fee is was sent to the oracle
+    // The correct fee was sent to the oracle
     cu.assertEventSent(
       evdata, 'FeeSent', address.oracle, cu.riskAmountWei.times(3)
     );

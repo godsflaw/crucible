@@ -70,7 +70,6 @@ contract Crucible is Ownable {
     }
 
     // set this if the penalty should be sent to a third party and not the pool
-    // TODO(godsflaw): test me
     beneficiary = _beneficiary;
 
     require(
@@ -153,8 +152,8 @@ contract Crucible is Ownable {
       return;
     }
 
-    // if we have participants and all failed, then fee is the entire balance
-    // TODO(godsflaw): test this
+    // if we have no beneficiary, and no participants pass,
+    // then fee is the entire balance.
     if (passCount == 0 && !(hasBeneficiary())) {
       fee = penalty;
     } else {
@@ -359,6 +358,7 @@ contract Crucible is Ownable {
     // the logic in this condition is checking for, then we will move to the
     // PAID state so that the contract can be killed and and let selfdestruct()
     // return the fee to the owner.
+    // TODO(godsflaw): consider beneficiary payout here.
     // TODO(godsflaw): apparently, one can still send money to the contract
     // so this second check won't work... fix it.
     if (address(this).balance == 0 ||
@@ -430,7 +430,6 @@ contract Crucible is Ownable {
       emit FeeSent(_destination, fee);
     }
 
-    // TODO(godsflaw): test this
     if (canPayBeneficiary() && beneficiary.send(penalty)) {
       released = released.add(penalty);
       penaltyPaid = true;
