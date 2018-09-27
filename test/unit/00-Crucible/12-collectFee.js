@@ -135,6 +135,11 @@ contract('Crucible - collectFee', async (accounts) => {
 
     // state did not change
     truffleAssert.eventNotEmitted(evdata, 'CrucibleStateChange');
+
+    // trigger payout
+    tx = await crucible.payout.sendTransaction(
+      0, 3, { 'from': address.oracle }
+    );
   });
 
   it('good before payout for PASS, FAIL, and WAITING with beneficiary', async () => {
@@ -189,6 +194,11 @@ contract('Crucible - collectFee', async (accounts) => {
 
     // state did not change
     truffleAssert.eventNotEmitted(evdata, 'CrucibleStateChange');
+
+    // trigger payout
+    tx = await crucibleB.payout.sendTransaction(
+      0, 3, { 'from': address.oracle }
+    );
   });
 
   it('good before payout for WAITING, FAIL, and FAIL', async () => {
@@ -232,6 +242,11 @@ contract('Crucible - collectFee', async (accounts) => {
 
     // state did not change
     truffleAssert.eventNotEmitted(evdata, 'CrucibleStateChange');
+
+    // trigger payout
+    tx = await crucible.payout.sendTransaction(
+      0, 3, { 'from': address.oracle }
+    );
   });
 
   it('good before payout for WAITING, FAIL, and FAIL with beneficiary', async () => {
@@ -291,6 +306,11 @@ contract('Crucible - collectFee', async (accounts) => {
 
     // state did not change
     truffleAssert.eventNotEmitted(evdata, 'CrucibleStateChange');
+
+    // trigger payout
+    tx = await crucibleB.payout.sendTransaction(
+      0, 3, { 'from': address.oracle }
+    );
   });
 
   it('good before payout if all in PASS state', async () => {
@@ -324,6 +344,11 @@ contract('Crucible - collectFee', async (accounts) => {
 
     // state did not change
     truffleAssert.eventNotEmitted(evdata, 'CrucibleStateChange');
+
+    // trigger payout
+    tx = await crucible.payout.sendTransaction(
+      0, 3, { 'from': address.oracle }
+    );
   });
 
   it('good before payout if all in PASS state with beneficiary', async () => {
@@ -361,6 +386,11 @@ contract('Crucible - collectFee', async (accounts) => {
 
     // state did not change
     truffleAssert.eventNotEmitted(evdata, 'CrucibleStateChange');
+
+    // trigger payout
+    tx = await crucibleB.payout.sendTransaction(
+      0, 3, { 'from': address.oracle }
+    );
   });
 
   it('good before payout if all in WAITING state', async () => {
@@ -388,6 +418,11 @@ contract('Crucible - collectFee', async (accounts) => {
 
     // state did not change
     truffleAssert.eventNotEmitted(evdata, 'CrucibleStateChange');
+
+    // trigger payout
+    tx = await crucible.payout.sendTransaction(
+      0, 3, { 'from': address.oracle }
+    );
   });
 
   it('good before payout if all in WAITING state with beneficiary', async () => {
@@ -419,6 +454,11 @@ contract('Crucible - collectFee', async (accounts) => {
 
     // state did not change
     truffleAssert.eventNotEmitted(evdata, 'CrucibleStateChange');
+
+    // trigger payout
+    tx = await crucibleB.payout.sendTransaction(
+      0, 3, { 'from': address.oracle }
+    );
   });
 
   it('good before payout if all in FAIL state', async () => {
@@ -460,6 +500,11 @@ contract('Crucible - collectFee', async (accounts) => {
       cu.crucibleStateIsFinished,
       cu.crucibleStateIsPaid
     );
+
+    // crucible in PAID state, so payout will throw
+    await expectThrow(crucible.payout.sendTransaction(
+      0, 3, { 'from': address.oracle }
+    ), EVMRevert);
   });
 
   it('good before payout if all in FAIL state with beneficiary', async () => {
@@ -515,6 +560,11 @@ contract('Crucible - collectFee', async (accounts) => {
       cu.crucibleStateIsFinished,
       cu.crucibleStateIsPaid
     );
+
+    // crucible in PAID state, so payout will throw
+    await expectThrow(crucibleB.payout.sendTransaction(
+      0, 3, { 'from': address.oracle }
+    ), EVMRevert);
   });
 
   it('good after payout for PASS, FAIL, and WAITING', async () => {

@@ -185,7 +185,6 @@ contract Crucible is Ownable {
             .sub(reserve)
             .sub(fee.add(penalty));
 
-          // TODO(godsflaw): test me
           if (hasBeneficiary()) {
             // the entire penalty goes to the beneficiary
             bonus = 0;
