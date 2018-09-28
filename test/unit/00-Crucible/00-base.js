@@ -96,6 +96,11 @@ contract('Crucible - base', async (accounts) => {
     assert.equal(reserve, 0, 'reserve is 0');
   });
 
+  it('verify trackingBalance is set', async () => {
+    var trackingBalance = await crucible.trackingBalance.call();
+    assert.equal(trackingBalance, 0, 'trackingBalance is 0');
+  });
+
   it('verify feePaid is set', async () => {
     var feePaid = await crucible.feePaid.call();
     assert.equal(feePaid, false, 'feePaid is false');

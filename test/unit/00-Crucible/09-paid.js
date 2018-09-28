@@ -201,4 +201,60 @@ contract('Crucible - paid', async (accounts) => {
     ), EVMRevert);
   });
 
+  it('payment after lock change state to PAID from collectFee()', async () => {
+    // balance after backdoor funds sent to contract
+    await cu.assertContractBalance(
+      crucible, cu.riskAmountWei.times(3)
+    );
+
+    // send funds after lock
+    await cu.backdoorSend(crucible, cu.tooLowAmountWei);
+
+    // balance after backdoor funds sent to contract
+    await cu.assertContractBalance(
+      crucible, cu.riskAmountWei.times(3).plus(cu.tooLowAmountWei)
+    );
+
+    var tx = await crucible.payout.sendTransaction(
+      0, 3, { 'from': address.oracle }
+    );
+
+    tx = await crucible.collectFee.sendTransaction(
+      address.oracle, { 'from': address.oracle }
+    );
+
+    var state = await crucible.state.call();
+    assert(
+      cu.crucibleStateIsPaid(state), 'crucible is in the PAID state'
+    );
+  });
+
+  it('payment after lock change state to PAID from payout()', async () => {
+    // balance after backdoor funds sent to contract
+    await cu.assertContractBalance(
+      crucible, cu.riskAmountWei.times(3)
+    );
+
+    // send funds after lock
+    await cu.backdoorSend(crucible, cu.tooLowAmountWei);
+
+    // balance after backdoor funds sent to contract
+    await cu.assertContractBalance(
+      crucible, cu.riskAmountWei.times(3).plus(cu.tooLowAmountWei)
+    );
+
+    var tx = await crucible.collectFee.sendTransaction(
+      address.oracle, { 'from': address.oracle }
+    );
+
+    tx = await crucible.payout.sendTransaction(
+      0, 3, { 'from': address.oracle }
+    );
+
+    var state = await crucible.state.call();
+    assert(
+      cu.crucibleStateIsPaid(state), 'crucible is in the PAID state'
+    );
+  });
+
 });

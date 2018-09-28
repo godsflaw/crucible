@@ -6,6 +6,8 @@ const Address = require('./address');
 const assert = require('chai').assert
 const truffleAssert = require('truffle-assertions');
 
+const TestSendSD = artifacts.require("./TestSendSD.sol");
+
 var GoalState = Object.freeze({
   'WAITING':1,
   'PASS':2,
@@ -63,6 +65,40 @@ CrucibleUtils.prototype.addBySender = async function (crucible, sender, particip
         'gasPrice': this.gasPrice,
       }
     )
+  );
+};
+
+// cool trick to send funds to a contract, bypassing the fallback function
+CrucibleUtils.prototype.backdoorSend = async function (crucible, amount) {
+  // make a new test send self-destruct contract
+  var testSendSD = await TestSendSD.new({ from: this.address.owner });
+
+  // get the balance of the crucible before
+  var balanceBefore = await web3.eth.getBalance(crucible.address);
+
+  // send money to the new test contract
+  var tx = await web3.eth.sendTransaction({
+    from: this.address.owner,
+    to: testSendSD.address,
+    value: amount,
+  });
+
+  // change the owner of the new contract
+  tx = await testSendSD.setOwner(
+    crucible.address, { from: this.address.owner }
+  );
+
+  // now kill the new contract so that selfdestruct() is called and sends
+  // the amount to the crucible contract, thus bypassing the fallback function.
+  await testSendSD.kill({ from: this.address.owner });
+
+  // get the balance of the crucible contract again, and compare it to make
+  // sure the balance increased by amount.
+  var balance = await web3.eth.getBalance(crucible.address);
+  assert.equal(
+    balance.toNumber(),
+    balanceBefore.plus(amount).toNumber(),
+    'contract balance correct'
   );
 };
 
@@ -331,6 +367,8 @@ CrucibleUtils.prototype.assertEventSent =
   async function (evdata, eventName, addr, amount) {
 
   truffleAssert.eventEmitted(evdata, eventName, (ev) => {
+    // assert.equal(ev.recipient, addr, 'address is correct');
+    // assert.equal(ev.amount.toNumber(), amount.toNumber(), 'amount is correct');
     return ev.recipient === addr && ev.amount.eq(amount);
   }, 'got ' + eventName + ' event with correct recipient and amount');
 };

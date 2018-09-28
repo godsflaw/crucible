@@ -21,6 +21,7 @@ contract Crucible is Ownable {
   uint256 public fee = 0;
   uint256 public released = 0;
   uint256 public reserve = 0;
+  uint256 public trackingBalance = 0;
   uint256 public feeNumerator = 100;
   uint256 public feeDenominator = 1000;
   CrucibleState public state = CrucibleState.OPEN;
@@ -50,19 +51,79 @@ contract Crucible is Ownable {
     GoalState metGoal;
   }
 
+  //
+  // events
+  //
+
   // event Debug(string msg, uint256 data);
-  event FeeSent(address recipient, uint256 amount);
-  event PenaltySent(address recipient, uint256 amount);
-  event PaymentSent(address recipient, uint256 amount);
-  event RefundSent(address recipient, uint256 amount);
-  event FundsReceived(address fromAddress, uint256 amount);
-  event FundsReceivedPayable(address fromAddress, uint256 amount);
-  event CrucibleStateChange(CrucibleState fromState, CrucibleState toState);
   event CommitmentStateChange(
     address participant, GoalState fromState, GoalState toState
   );
+  event CrucibleStateChange(
+    CrucibleState fromState, CrucibleState toState
+  );
+  event FeeSent(
+    address recipient, uint256 amount
+  );
+  event FundsReceived(
+    address fromAddress, uint256 amount
+  );
+  event FundsReceivedPayable(
+    address fromAddress, uint256 amount
+  );
+  event PaymentSent(
+    address recipient, uint256 amount
+  );
+  event PenaltySent(
+    address recipient, uint256 amount
+  );
+  event RefundSent(
+    address recipient, uint256 amount
+  );
 
-  constructor(address _owner, address _beneficiary, uint _startDate, uint _lockDate, uint _endDate, uint256 _minimumAmount, uint _timeout, uint256 _feeNumerator) public {
+  //
+  // modifiers
+  //
+
+  modifier inState(CrucibleState _state) {
+      require(
+          state == _state,
+          "Function cannot be called at this time."
+      );
+      _;
+  }
+
+  modifier inEitherState(CrucibleState _stateA, CrucibleState _stateB) {
+      require(
+          state == _stateA || state == _stateB,
+          "Function cannot be called at this time."
+      );
+      _;
+  }
+
+  modifier notInState(CrucibleState _state) {
+      require(
+          state != _state,
+          "Function cannot be called at this time."
+      );
+      _;
+  }
+
+  //
+  // constructor, fallback, kill
+  //
+
+  constructor(
+    address _owner,
+    address _beneficiary,
+    uint _startDate,
+    uint _lockDate,
+    uint _endDate,
+    uint256 _minimumAmount,
+    uint _timeout,
+    uint256 _feeNumerator
+  ) public {
+
     if (_owner == address(0x0)) {
       owner = msg.sender;
     } else {
@@ -99,49 +160,31 @@ contract Crucible is Ownable {
 
     // It sounds strange, but even if an address doesn't exist yet, it can
     // have a balance.  If the address this contract lands on already has a
-    // balance, we will just shunt that into penalty when lock() runs.  This
-    // means that the funds that already exist become a bonus for participants.
+    // balance, we can fix that with a call to _rebalance() when moving to
+    // the LOCKED state.
   }
 
-  modifier notInState(CrucibleState _state) {
-      require(
-          state != _state,
-          "Function cannot be called at this time."
-      );
-      _;
-  }
-
-  modifier inState(CrucibleState _state) {
-      require(
-          state == _state,
-          "Function cannot be called at this time."
-      );
-      _;
-  }
-
-  modifier inEitherState(CrucibleState _stateA, CrucibleState _stateB) {
-      require(
-          state == _stateA || state == _stateB,
-          "Function cannot be called at this time."
-      );
-      _;
-  }
-
+  // fallback function
   function () external payable inState(CrucibleState.OPEN) {
     require(msg.data.length == 0);
 
     // The oracle is encouraged to listen for FundsReceivedPayable and either
-    // add the user to the crucible by calling add() or wait until LOCKED, when
-    // additional funds will be moved to penalty.
+    // add the user to the crucible by calling add(), or wait until a state
+    // change to LOCKED, when _rebalance() is called.
     emit FundsReceivedPayable(msg.sender, msg.value);
   }
 
+  // kill function
   function kill() external onlyOwner {
     if (state == CrucibleState.PAID) {
       emit CrucibleStateChange(state, CrucibleState.KILLED);
       selfdestruct(owner);
     }
   }
+
+  //
+  // internal functions (always names with leading _)
+  //
 
   // This function calculates the fee for the oracle.  It should be noted
   // that this relationship with the oracle requires complete trust.  The
@@ -154,7 +197,7 @@ contract Crucible is Ownable {
 
     // if we have no beneficiary, and no participants pass,
     // then fee is the entire balance.
-    if (passCount == 0 && !(hasBeneficiary())) {
+    if (passCount == 0 && !(_hasBeneficiary())) {
       fee = penalty;
     } else {
       fee = penalty.mul(feeNumerator).div(feeDenominator);
@@ -163,6 +206,26 @@ contract Crucible is Ownable {
     penalty = penalty.sub(fee);
 
     calculateFee = true;
+  }
+
+  function _canSend(uint256 _amount) internal view returns(bool) {
+    return (
+      _amount > 0 &&
+      address(this).balance >= _amount &&
+      trackingBalance >= _amount
+    );
+  }
+
+  function _canPayFee() internal view returns(bool) {
+    return (!(feePaid) && _canSend(fee));
+  }
+
+  function _canPayBeneficiary() internal view returns(bool) {
+    return (_hasBeneficiary() && !(penaltyPaid) && _canSend(penalty));
+  }
+
+  function _hasBeneficiary() internal view returns(bool) {
+    return (beneficiary != address(0x0));
   }
 
   function _processPayouts(uint _startIndex, uint _records) internal {
@@ -180,12 +243,12 @@ contract Crucible is Ownable {
           // again as the risked balance is still > 0.  Worst case, the
           // crucible gets marked as BROKEN, and the participant can call the
           // withdrawl function to get their risked amount back.
-          uint256 totalFunds = address(this).balance
+          uint256 totalFunds = trackingBalance
             .add(released)
             .sub(reserve)
             .sub(fee.add(penalty));
 
-          if (hasBeneficiary()) {
+          if (_hasBeneficiary()) {
             // the entire penalty goes to the beneficiary
             bonus = 0;
           } else {
@@ -198,7 +261,8 @@ contract Crucible is Ownable {
           uint256 payment = commitments[participant].amount.add(bonus);
 
           // The gas stipend should stop re-entrancy.
-          if (participant.send(payment)) {
+          if (_canSend(payment) && participant.send(payment)) {
+            trackingBalance = trackingBalance.sub(payment);
             released = released.add(payment);
             emit PaymentSent(participant, payment);
             commitments[participant].amount = 0;
@@ -220,7 +284,10 @@ contract Crucible is Ownable {
           // if the participant is an attacker, they simply won't be counted in
           // the total or profit, thus denying influence or reward of the bonus.
           // The gas stipend should stop re-entrancy.
-          if (participant.send(commitments[participant].amount)) {
+          if (_canSend(commitments[participant].amount) &&
+              participant.send(commitments[participant].amount)) {
+            trackingBalance =
+              trackingBalance.sub(commitments[participant].amount);
             reserve = reserve.sub(commitments[participant].amount);
             emit RefundSent(participant, commitments[participant].amount);
             commitments[participant].amount = 0;
@@ -230,36 +297,39 @@ contract Crucible is Ownable {
     }
   }
 
-  function participantExists(address _participant) public view returns(bool) {
-    return commitments[_participant].exists;
+  // should only ever be called once
+  function _rebalance() internal {
+    // trackingBalance should perfectly match the crucible balance.  Move any
+    // amount from balance that is greater than the trackingBalance from balance
+    // to penalty. This handles both the case where the contract address already
+    // had a balance, and the case where money is sent directly to the contract
+    // but the oracle chose not to spend their own funds and add() it.
+    if (address(this).balance > trackingBalance) {
+      uint256 delta = address(this).balance.sub(trackingBalance);
+      penalty = penalty.add(delta);
+      trackingBalance = trackingBalance.add(delta);
+    }
   }
 
-  //TODO(godsflaw): test this
-  function canPayFee() public view returns(bool) {
-    return (!(feePaid) && fee > 0 && address(this).balance >= fee);
-  }
-
-  //TODO(godsflaw): test this
-  function hasBeneficiary() public view returns(bool) {
-    return (beneficiary != address(0x0));
-  }
-
-  //TODO(godsflaw): test this
-  function canPayBeneficiary() public view returns(bool) {
-    return (
-      hasBeneficiary() &&
-      !(penaltyPaid) &&
-      penalty > 0 &&
-      address(this).balance >= penalty
-    );
-  }
+  //
+  // view functions
+  //
 
   function count() external view returns(uint) {
     return participants.length;
   }
 
-  // add() will allow anyone to add themselves once to the contract.  It will
-  // also alow the oracle to add a participant with the same unique constraint.
+  function participantExists(address _participant) public view returns(bool) {
+    return commitments[_participant].exists;
+  }
+
+  //
+  // mutable functions
+  //
+
+  // add() adds unique participants
+  // Will allow anyone to add (fund) themselves once to the contract (stick).
+  // Will allow the oracle to add (fund) a participant (carrot).
   function add(address _participant)
     external
     payable
@@ -286,10 +356,72 @@ contract Crucible is Ownable {
     participants.push(_participant);
 
     reserve = reserve.add(commitments[_participant].amount);
+    trackingBalance = trackingBalance.add(commitments[_participant].amount);
 
     emit FundsReceived(_participant, msg.value);
   }
 
+  // collectFee() will payout any fees to _destination and any penalty to
+  // the beneficiary if appropriate.  This function may be called many times,
+  // and may eventually move the crucible to the PAID state.
+  function collectFee(address _destination)
+    external
+    onlyOwner
+    inEitherState(CrucibleState.FINISHED, CrucibleState.BROKEN) {
+
+    _calculateFee();
+
+    // send the fee payment off if there is one
+    if (_canPayFee() && _destination.send(fee)) {
+      trackingBalance = trackingBalance.sub(fee);
+      released = released.add(fee);
+      feePaid = true;
+      emit FeeSent(_destination, fee);
+    }
+
+    // send the beneficiary payment off if there is one
+    if (_canPayBeneficiary() && beneficiary.send(penalty)) {
+      trackingBalance = trackingBalance.sub(penalty);
+      released = released.add(penalty);
+      penaltyPaid = true;
+      emit PenaltySent(beneficiary, penalty);
+    }
+
+    // possibly move to the paid state
+    paid();
+  }
+
+  // payout() will process as many records in participants[] as specified and
+  // payout that many records.  This function may be called many times, and may
+  // eventually move the crucible to the PAID state.
+  function payout(uint _startIndex, uint _records)
+    public
+    inEitherState(CrucibleState.FINISHED, CrucibleState.BROKEN) {
+
+    require(_records > 0, 'cannot request 0 records');
+
+    // bound check and normalize _start
+    if (_startIndex >= participants.length) {
+      _startIndex = participants.length - 1;
+    }
+
+    // bound check and normalize _records
+    if ((_startIndex + _records) > participants.length) {
+      _records = participants.length - _startIndex;
+    }
+
+    // fee must be calculated before anyone can get paid out
+    _calculateFee();
+
+    // this function will process payouts for a range of commitments
+    _processPayouts(_startIndex, _records);
+
+    // possibly move to the paid state
+    paid();
+  }
+
+  // setGoal() allows the oracle to move a participant once from WAITING
+  // to PASS or FAIL to indicate if they have met the goal of the crucible.
   function setGoal(address _participant, bool _metGoal)
     external
     onlyOwner
@@ -323,18 +455,14 @@ contract Crucible is Ownable {
     );
   }
 
+  //
+  // state change functions (in order of state transition)
+  //
+
   function lock() external inState(CrucibleState.OPEN) {
     require(lockDate <= now, 'can only moved to LOCKED state after lockDate');
 
-    // Reserve should perfectly match the crucible balance.  Move any amount
-    // from balance that is greater than the reserve from balance to penalty.
-    // This handles both the case where the contract address already had a
-    // balance, and the case where money is sent directly to the contract but
-    // the oracle chose not to spend their own funds and add() it.
-    if (address(this).balance > reserve) {
-      uint256 delta = address(this).balance.sub(reserve);
-      penalty = penalty.add(delta);
-    }
+    _rebalance();
 
     state = CrucibleState.LOCKED;
     emit CrucibleStateChange(CrucibleState.OPEN, CrucibleState.LOCKED);
@@ -342,7 +470,6 @@ contract Crucible is Ownable {
 
   function judgement() external inState(CrucibleState.LOCKED) {
     require(endDate <= now, 'can only moved to JUDGEMENT state after endDate');
-
     state = CrucibleState.JUDGEMENT;
     emit CrucibleStateChange(CrucibleState.LOCKED, CrucibleState.JUDGEMENT);
   }
@@ -355,10 +482,7 @@ contract Crucible is Ownable {
   function paid()
     public
     inEitherState(CrucibleState.FINISHED, CrucibleState.BROKEN) {
-
-    // TODO(godsflaw): apparently, one can still send money to the contract
-    // so we need to check our own tracked balance against released.
-    if (address(this).balance == 0) {
+    if (trackingBalance == 0) {
       CrucibleState currentState = state;
       state = CrucibleState.PAID;
       emit CrucibleStateChange(currentState, CrucibleState.PAID);
@@ -381,61 +505,4 @@ contract Crucible is Ownable {
     emit CrucibleStateChange(currentState, CrucibleState.BROKEN);
   }
 
-  // payout() will process as many records in participants[] as specified and
-  // payout that many records.  This method may be called many times, and may
-  // eventually move the crucible to the PAID state.
-  function payout(uint _startIndex, uint _records)
-    public
-    inEitherState(CrucibleState.FINISHED, CrucibleState.BROKEN) {
-
-    require(_records > 0, 'cannot request 0 records');
-
-    // bound check and normalize _start
-    if (_startIndex >= participants.length) {
-      _startIndex = participants.length - 1;
-    }
-
-    // bound check and normalize _records
-    if ((_startIndex + _records) > participants.length) {
-      _records = participants.length - _startIndex;
-    }
-
-    // fee must be calculated before anyone can get paid out
-    _calculateFee();
-
-    // this function will process payouts for a range of commitments
-    _processPayouts(_startIndex, _records);
-
-    // possibly move to the paid state
-    paid();
-  }
-
-
-  // collectFee() will payout any fees to _destination and any penalty to
-  // the beneficiary if appropriate.  This method may be called many times, and
-  // may eventually move the crucible to the PAID state.
-  function collectFee(address _destination)
-    external
-    onlyOwner
-    inEitherState(CrucibleState.FINISHED, CrucibleState.BROKEN) {
-
-    _calculateFee();
-
-    // send the fee payment off if there is one
-    if (canPayFee() && _destination.send(fee)) {
-      released = released.add(fee);
-      feePaid = true;
-      emit FeeSent(_destination, fee);
-    }
-
-    // send the beneficiary payment off if there is one
-    if (canPayBeneficiary() && beneficiary.send(penalty)) {
-      released = released.add(penalty);
-      penaltyPaid = true;
-      emit PenaltySent(beneficiary, penalty);
-    }
-
-    // possibly move to the paid state
-    paid();
-  }
 }

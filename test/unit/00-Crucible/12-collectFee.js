@@ -80,10 +80,10 @@ contract('Crucible - collectFee', async (accounts) => {
     calculateFee = await crucibleB.calculateFee();
     assert.equal(calculateFee, false, '_calculateFee() not run yet');
 
-    var feePaid = await crucibleB.feePaid.call();
+    feePaid = await crucibleB.feePaid.call();
     assert.equal(feePaid, false, 'feePaid correct');
 
-    var penaltyPaid = await crucibleB.penaltyPaid.call();
+    penaltyPaid = await crucibleB.penaltyPaid.call();
     assert.equal(penaltyPaid, false, 'penaltyPaid correct');
   });
 
@@ -1592,6 +1592,320 @@ contract('Crucible - collectFee', async (accounts) => {
         address.oracle, { 'from': address.oracle }
       ), EVMRevert);
     }
+  });
+
+  it('funds sent before lock go to penalty', async () => {
+    var tx;
+
+    crucible = await Crucible.new(
+      address.oracle,
+      address.empty,
+      cu.startDate(),
+      cu.lockDate(2),
+      cu.endDate(4),
+      cu.minAmountWei,
+      8,
+      cu.feeNumerator,
+      { from: address.oracle }
+    );
+
+    for (var i = 1; i <= 3; i++) {
+      tx = await cu.add(crucible, 'user' + i);
+    }
+
+    feeNumerator = await crucible.feeNumerator();
+    feeDenominator = await crucible.feeDenominator();
+    fee = cu.riskAmountWei
+      .plus(cu.tooLowAmountWei)
+      .times(feeNumerator)
+      .dividedBy(feeDenominator);
+    count = await crucible.count();
+
+    await cu.sleep(2000);
+
+    tx = await web3.eth.sendTransaction({
+      from: address.owner,
+      to: crucible.address,
+      value: cu.tooLowAmountWei,
+    });
+
+    tx = await crucible.lock.sendTransaction({ 'from': address.oracle });
+
+    await cu.sleep(2000);
+
+    var calculateFee = await crucible.calculateFee();
+    assert.equal(calculateFee, false, '_calculateFee() not run yet');
+
+    var feePaid = await crucible.feePaid.call();
+    assert.equal(feePaid, false, 'feePaid correct');
+
+    var penaltyPaid = await crucible.penaltyPaid.call();
+    assert.equal(penaltyPaid, false, 'penaltyPaid correct');
+
+    // set user2 to FAIL
+    tx = await crucible.setGoal.sendTransaction(
+      address.user2, false, { 'from': address.oracle }
+    );
+
+    tx = await crucible.judgement.sendTransaction({ 'from': address.oracle });
+
+    // set user1 to PASS
+    tx = await crucible.setGoal.sendTransaction(
+      address.user1, true, { 'from': address.oracle }
+    );
+
+    tx = await crucible.finish.sendTransaction({ 'from': address.oracle });
+
+    // NOTE: we left user3 in WAITING state
+
+    // trigger fee payout
+    tx = await crucible.collectFee.sendTransaction(
+      address.oracle, { 'from': address.oracle }
+    );
+    var evdata = await truffleAssert.createTransactionResult(crucible, tx);
+
+    calculateFee = await crucible.calculateFee();
+    assert.equal(calculateFee, true, '_calculateFee() run');
+
+    // The correct fee was sent to the oracle
+    cu.assertEventSent(evdata, 'FeeSent', address.oracle, fee);
+
+    feePaid = await crucible.feePaid.call();
+    assert.equal(feePaid, true, 'feePaid correct');
+
+    penaltyPaid = await crucible.penaltyPaid.call();
+    assert.equal(penaltyPaid, false, 'penaltyPaid correct');
+
+    // state did not change
+    truffleAssert.eventNotEmitted(evdata, 'CrucibleStateChange');
+
+    // trigger payout
+    tx = await crucible.payout.sendTransaction(
+      0, 3, { 'from': address.oracle }
+    );
+  });
+
+  it('funds sent before lock go to penalty with beneficiary', async () => {
+    var tx;
+
+    crucibleB = await Crucible.new(
+      address.oracle,
+      address.owner,
+      cu.startDate(),
+      cu.lockDate(2),
+      cu.endDate(4),
+      cu.minAmountWei,
+      8,
+      cu.feeNumerator,
+      { from: address.oracle }
+    );
+
+    for (var i = 1; i <= 3; i++) {
+      tx = await cu.add(crucibleB, 'user' + i);
+    }
+
+    feeNumeratorB = await crucibleB.feeNumerator();
+    feeDenominatorB = await crucibleB.feeDenominator();
+    feeB = cu.riskAmountWei
+      .plus(cu.tooLowAmountWei)
+      .times(feeNumeratorB)
+      .dividedBy(feeDenominatorB);
+    countB = await crucibleB.count();
+
+    await cu.sleep(2000);
+
+    tx = await web3.eth.sendTransaction({
+      from: address.owner,
+      to: crucibleB.address,
+      value: cu.tooLowAmountWei,
+    });
+
+    tx = await crucibleB.lock.sendTransaction({ 'from': address.oracle });
+
+    await cu.sleep(2000);
+
+    var calculateFee = await crucibleB.calculateFee();
+    assert.equal(calculateFee, false, '_calculateFee() not run yet');
+
+    var feePaid = await crucibleB.feePaid.call();
+    assert.equal(feePaid, false, 'feePaid correct');
+
+    var penaltyPaid = await crucibleB.penaltyPaid.call();
+    assert.equal(penaltyPaid, false, 'penaltyPaid correct');
+
+    // set user2 to FAIL
+    tx = await crucibleB.setGoal.sendTransaction(
+      address.user2, false, { 'from': address.oracle }
+    );
+
+    tx = await crucibleB.judgement.sendTransaction({ 'from': address.oracle });
+
+    // set user1 to PASS
+    tx = await crucibleB.setGoal.sendTransaction(
+      address.user1, true, { 'from': address.oracle }
+    );
+
+    tx = await crucibleB.finish.sendTransaction({ 'from': address.oracle });
+
+    // NOTE: we left user3 in WAITING state
+
+    // trigger fee payout
+    tx = await crucibleB.collectFee.sendTransaction(
+      address.oracle, { 'from': address.oracle }
+    );
+    var evdata = await truffleAssert.createTransactionResult(crucibleB, tx);
+
+    // The correct fee was sent to the oracle
+    cu.assertEventSent(
+      evdata,
+      'FeeSent',
+      address.oracle,
+      feeB
+    );
+
+    // The correct penalty was sent to the owner
+    cu.assertEventSent(
+      evdata,
+      'PenaltySent',
+      address.owner,
+      cu.riskAmountWei.plus(cu.tooLowAmountWei).minus(feeB)
+    );
+
+    calculateFee = await crucibleB.calculateFee();
+    assert.equal(calculateFee, true, '_calculateFee() run');
+
+    feePaid = await crucibleB.feePaid.call();
+    assert.equal(feePaid, true, 'feePaid correct');
+
+    penaltyPaid = await crucibleB.penaltyPaid.call();
+    assert.equal(penaltyPaid, true, 'penaltyPaid correct');
+
+    // state did not change
+    truffleAssert.eventNotEmitted(evdata, 'CrucibleStateChange');
+
+    // trigger payout
+    tx = await crucibleB.payout.sendTransaction(
+      0, 3, { 'from': address.oracle }
+    );
+  });
+
+  it('funds sent after lock are ignored', async () => {
+    var tx;
+
+    fee = cu.riskAmountWei
+      .times(feeNumerator)
+      .dividedBy(feeDenominator);
+
+    // send funds after lock
+    await cu.backdoorSend(crucible, cu.tooLowAmountWei);
+
+    // set user2 to FAIL
+    tx = await crucible.setGoal.sendTransaction(
+      address.user2, false, { 'from': address.oracle }
+    );
+
+    tx = await crucible.judgement.sendTransaction({ 'from': address.oracle });
+
+    // set user1 to PASS
+    tx = await crucible.setGoal.sendTransaction(
+      address.user1, true, { 'from': address.oracle }
+    );
+
+    tx = await crucible.finish.sendTransaction({ 'from': address.oracle });
+
+    // NOTE: we left user3 in WAITING state
+
+    // trigger fee payout
+    tx = await crucible.collectFee.sendTransaction(
+      address.oracle, { 'from': address.oracle }
+    );
+    var evdata = await truffleAssert.createTransactionResult(crucible, tx);
+
+    calculateFee = await crucible.calculateFee();
+    assert.equal(calculateFee, true, '_calculateFee() run');
+
+    // The correct fee was sent to the oracle
+    cu.assertEventSent(evdata, 'FeeSent', address.oracle, fee);
+
+    feePaid = await crucible.feePaid.call();
+    assert.equal(feePaid, true, 'feePaid correct');
+
+    penaltyPaid = await crucible.penaltyPaid.call();
+    assert.equal(penaltyPaid, false, 'penaltyPaid correct');
+
+    // state did not change
+    truffleAssert.eventNotEmitted(evdata, 'CrucibleStateChange');
+
+    // trigger payout
+    tx = await crucible.payout.sendTransaction(
+      0, 3, { 'from': address.oracle }
+    );
+  });
+
+  it('funds sent after lock are ignored with beneficiary', async () => {
+    var tx;
+
+    // send funds after lock
+    await cu.backdoorSend(crucibleB, cu.tooLowAmountWei);
+
+    feeB = cu.riskAmountWei
+      .times(feeNumeratorB)
+      .dividedBy(feeDenominatorB);
+
+    // set user2 to FAIL
+    tx = await crucibleB.setGoal.sendTransaction(
+      address.user2, false, { 'from': address.oracle }
+    );
+
+    tx = await crucibleB.judgement.sendTransaction({ 'from': address.oracle });
+
+    // set user1 to PASS
+    tx = await crucibleB.setGoal.sendTransaction(
+      address.user1, true, { 'from': address.oracle }
+    );
+
+    tx = await crucibleB.finish.sendTransaction({ 'from': address.oracle });
+
+    // NOTE: we left user3 in WAITING state
+
+    // trigger fee payout
+    tx = await crucibleB.collectFee.sendTransaction(
+      address.oracle, { 'from': address.oracle }
+    );
+    var evdata = await truffleAssert.createTransactionResult(crucibleB, tx);
+
+    // The correct fee was sent to the oracle
+    cu.assertEventSent(
+      evdata,
+      'FeeSent',
+      address.oracle,
+      feeB
+    );
+
+    // The correct penalty was sent to the owner
+    cu.assertEventSent(
+      evdata,
+      'PenaltySent',
+      address.owner,
+      cu.riskAmountWei.minus(feeB)
+    );
+
+    calculateFee = await crucibleB.calculateFee();
+    assert.equal(calculateFee, true, '_calculateFee() run');
+
+    feePaid = await crucibleB.feePaid.call();
+    assert.equal(feePaid, true, 'feePaid correct');
+
+    penaltyPaid = await crucibleB.penaltyPaid.call();
+    assert.equal(penaltyPaid, true, 'penaltyPaid correct');
+
+    // state did not change
+    truffleAssert.eventNotEmitted(evdata, 'CrucibleStateChange');
+
+    // trigger payout
+    tx = await crucibleB.payout.sendTransaction(
+      0, 3, { 'from': address.oracle }
+    );
   });
 
 });

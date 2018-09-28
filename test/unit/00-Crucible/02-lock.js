@@ -62,7 +62,27 @@ contract('Crucible - lock', async (accounts) => {
     assert(cu.crucibleStateIsLocked(state), 'crucible is in the LOCKED state');
   });
 
-  it('excess money found on balance is moved to penalty', async () => {
+  it('test that _rebalance() is called', async () => {
+    var balance = await web3.eth.getBalance(crucible.address);
+    assert.equal(
+      balance.toNumber(),
+      cu.riskAmountWei.times(2),
+      'balance is correct'
+    );
+
+    var trackingBalance = await crucible.trackingBalance.call();
+    assert.equal(
+      trackingBalance.toNumber(),
+      cu.riskAmountWei.times(2),
+      'trackingBalance is correct'
+    );
+
+    assert.equal(
+      trackingBalance.toNumber(),
+      balance.toNumber(),
+      'trackingBalance matches balance'
+    );
+
     var penalty = await crucible.penalty.call();
     assert.equal(penalty.toNumber(), 0, 'penalty is correct');
 
@@ -75,30 +95,42 @@ contract('Crucible - lock', async (accounts) => {
     penalty = await crucible.penalty.call();
     assert.equal(penalty.toNumber(), 0, 'penalty is correct');
 
-    var reserve = await crucible.reserve.call();
-    var balance = await web3.eth.getBalance(crucible.address);
+    trackingBalance = await crucible.trackingBalance.call();
+    assert.equal(
+      trackingBalance.toNumber(),
+      cu.riskAmountWei.times(2),
+      'trackingBalance is expected'
+    );
+
+    balance = await web3.eth.getBalance(crucible.address);
+    assert.equal(
+      balance.toNumber(),
+      cu.riskAmountWei.times(2).plus(cu.tooLowAmountWei),
+      'balance is expected'
+    );
 
     assert(
-      reserve.plus(penalty).toNumber() < balance.toNumber(),
-      'reserve + penalty is less than balance'
+      trackingBalance.toNumber() < balance.toNumber(),
+      'trackingBalance out-of-sync with balance'
     );
 
     await cu.sleep(2000);
 
+    // this should call _rebalance()
     tx = await crucible.lock.sendTransaction({ 'from': address.oracle });
     state = await crucible.state.call();
     assert(cu.crucibleStateIsLocked(state), 'crucible is in the LOCKED state');
 
-    reserve = await crucible.reserve.call();
+    trackingBalance = await crucible.trackingBalance.call();
     penalty = await crucible.penalty.call();
     balance = await web3.eth.getBalance(crucible.address);
 
     assert.equal(penalty.toNumber(), cu.tooLowAmountWei, 'penalty is correct');
 
     assert.equal(
-      reserve.plus(penalty).toNumber(),
+      trackingBalance.toNumber(),
       balance.toNumber(),
-      'reserve + penalty is now the same as balance'
+      'trackingBalance is now the same as balance again'
     );
   });
 

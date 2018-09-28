@@ -2057,6 +2057,191 @@ contract('Crucible - payout', async (accounts) => {
     );
   });
 
+  it('funds sent after lock are ignored', async () => {
+    var tx;
+
+    // set user2 to FAIL
+    tx = await crucible.setGoal.sendTransaction(
+      address.user2, false, { 'from': address.oracle }
+    );
+
+    tx = await crucible.judgement.sendTransaction({ 'from': address.oracle });
+
+    // set user1 to PASS
+    tx = await crucible.setGoal.sendTransaction(
+      address.user1, true, { 'from': address.oracle }
+    );
+
+    tx = await crucible.finish.sendTransaction({ 'from': address.oracle });
+
+    // NOTE: we left user3 in WAITING state
+
+    // balances before payout
+    await cu.assertStartBalances(
+      crucible, cu.riskAmountWei, startBalances, addTx
+    );
+
+    // send funds after lock
+    await cu.backdoorSend(crucible, cu.tooLowAmountWei);
+
+    // balance after backdoor funds sent to contract
+    await cu.assertContractBalance(
+      crucible, cu.riskAmountWei.times(3).plus(cu.tooLowAmountWei)
+    );
+
+    // trigger fee payout
+    tx = await crucible.collectFee.sendTransaction(
+      address.oracle, { 'from': address.oracle }
+    );
+    var evdata = await truffleAssert.createTransactionResult(crucible, tx);
+
+    // The correct fee was sent to the oracle
+    cu.assertEventSent(evdata, 'FeeSent', address.oracle, fee);
+
+    // trigger payout
+    tx = await crucible.payout.sendTransaction(
+      0, count, { 'from': address.oracle }
+    );
+    evdata = await truffleAssert.createTransactionResult(crucible, tx);
+
+    // balances after payout
+    await cu.assertContractBalance(crucible, cu.tooLowAmountWei);
+
+    // This participant passed, calculate payout
+    var bonus = cu.riskAmountWei.minus(fee);
+    cu.assertEventSent(
+      evdata, 'PaymentSent', address.user1, cu.riskAmountWei.plus(bonus)
+    );
+    cu.assertUserWalletBalance(
+      'user1',
+      startBalances['user1']
+        .minus(await cu.gasCost(addTx['user1']))
+        .plus(
+          cu.riskAmountWei.minus(fee)
+        ).toNumber()
+    );
+
+    // This participant failed, so there was no payout
+    cu.assertUserWalletBalance(
+      'user2',
+      startBalances['user2']
+        .minus(await cu.gasCost(addTx['user2']))
+        .minus(cu.riskAmountWei)
+        .toNumber()
+    );
+
+    // This participant was stuck WAITING, so there was a refund
+    cu.assertEventSent(evdata, 'RefundSent', address.user3, cu.riskAmountWei);
+    cu.assertUserWalletBalance(
+      'user3',
+      startBalances['user3'].minus(await cu.gasCost(addTx['user3'])).toNumber()
+    );
+
+    // We are in the paid state, and got the event
+    await cu.assertCrucibleState(
+      crucible,
+      evdata,
+      'CrucibleStateChange',
+      cu.crucibleStateIsFinished,
+      cu.crucibleStateIsPaid
+    );
+  });
+
+  it('funds sent after lock are ignored with beneficiary', async () => {
+    var tx;
+
+    // set user2 to FAIL
+    tx = await crucibleB.setGoal.sendTransaction(
+      address.user2, false, { 'from': address.oracle }
+    );
+
+    tx = await crucibleB.judgement.sendTransaction({ 'from': address.oracle });
+
+    // set user1 to PASS
+    tx = await crucibleB.setGoal.sendTransaction(
+      address.user1, true, { 'from': address.oracle }
+    );
+
+    tx = await crucibleB.finish.sendTransaction({ 'from': address.oracle });
+
+    // NOTE: we left user3 in WAITING state
+
+    // balances before payout
+    await cu.assertStartBalances(
+      crucibleB, cu.riskAmountWei, startBalances, addTx
+    );
+
+    // send funds after lock
+    await cu.backdoorSend(crucibleB, cu.tooLowAmountWei);
+
+    // balance after backdoor funds sent to contract
+    await cu.assertContractBalance(
+      crucibleB, cu.riskAmountWei.times(3).plus(cu.tooLowAmountWei)
+    );
+
+    // trigger fee payout
+    tx = await crucibleB.collectFee.sendTransaction(
+      address.oracle, { 'from': address.oracle }
+    );
+    var evdata = await truffleAssert.createTransactionResult(crucibleB, tx);
+
+    // not done yet
+    truffleAssert.eventNotEmitted(evdata, 'CrucibleStateChange');
+
+    // The correct fee was sent to the oracle
+    cu.assertEventSent(evdata, 'FeeSent', address.oracle, feeB);
+
+    // beneficiary payout and balance
+    var penalty = cu.riskAmountWei.minus(feeB);
+    cu.assertEventSent(evdata, 'PenaltySent', address.owner, penalty);
+
+    // trigger payout
+    tx = await crucibleB.payout.sendTransaction(
+      0, countB, { 'from': address.oracle }
+    );
+    evdata = await truffleAssert.createTransactionResult(crucibleB, tx);
+
+    // balances after payout
+    await cu.assertContractBalance(crucibleB, cu.tooLowAmountWei);
+
+    // This participant passed, calculate payout
+    cu.assertEventSent(
+      evdata, 'PaymentSent', address.user1, cu.riskAmountWei
+    );
+    cu.assertUserWalletBalance(
+      'user1',
+      startBalances['user1']
+        .minus(await cu.gasCost(addTx['user1']))
+        .toNumber()
+    );
+
+    // This participant failed, so there was no payout
+    cu.assertUserWalletBalance(
+      'user2',
+      startBalances['user2']
+        .minus(await cu.gasCost(addTx['user2']))
+        .minus(cu.riskAmountWei)
+        .toNumber()
+    );
+
+    // This participant was stuck WAITING, so there was a refund
+    cu.assertEventSent(evdata, 'RefundSent', address.user3, cu.riskAmountWei);
+    cu.assertUserWalletBalance(
+      'user3',
+      startBalances['user3']
+        .minus(await cu.gasCost(addTx['user3']))
+        .toNumber()
+    );
+
+    // We are in the paid state, and got the event
+    await cu.assertCrucibleState(
+      crucibleB,
+      evdata,
+      'CrucibleStateChange',
+      cu.crucibleStateIsFinished,
+      cu.crucibleStateIsPaid
+    );
+  });
 
   // TODO(godsflaw): what happens if we try to pay, refund, or pay the fee to a
   // payable contract with a payable function that exceeds the gas stipend.
