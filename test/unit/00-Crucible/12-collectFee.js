@@ -2035,7 +2035,7 @@ contract('Crucible - collectFee', async (accounts) => {
     cu.assertEventSent(
       evdata,
       'PenaltyFailed',
-      address.owner,
+      contract.address,
       cu.riskAmountWei.times(3).minus(feeB)
     );
 
