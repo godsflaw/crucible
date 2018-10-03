@@ -15,8 +15,6 @@ contract TestSendSD is Ownable {
 
   // fallback function
   function () external payable {
-    require(msg.data.length == 0);
-
     // this should be more than the gas stipend
     pointless = msg.sender;
   }

@@ -315,22 +315,4 @@ contract('Crucible - base', async (accounts) => {
     }
   });
 
-//  TODO(godsflaw): at some point, figure out how to invoke the fallback
-//  function in the contract with data so that we can tests that data.length
-//  is 0 throws.
-//
-//  it('payable fallback only works with zero data length', async () => {
-//    var type = ["string"];
-//    var value = ["test"];
-//
-//    var encoded = abi.rawEncode(type, value);
-//
-//    await expectThrow(web3.eth.sendTransaction({
-//      from: address.owner,
-//      to: crucible.address,
-//      value: cu.tooLowAmountWei,
-//      data: encoded,
-//    }), EVMRevert);
-//  });
-
 });

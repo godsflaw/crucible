@@ -68,6 +68,33 @@ CrucibleUtils.prototype.addBySender = async function (crucible, sender, particip
   );
 };
 
+CrucibleUtils.prototype.addContract = async function (crucible, _amount) {
+  var amount = (_amount === undefined) ? this.riskAmountWei : _amount;
+
+  // make a new test send self-destruct contract
+  var testSendSD = await TestSendSD.new({ from: this.address.owner });
+
+  // get the balance of the crucible before
+  var balanceBefore = await web3.eth.getBalance(crucible.address);
+
+  await web3.eth.getTransactionReceipt(
+    await crucible.add.sendTransaction(
+      testSendSD.address,
+      {
+        'from': this.address.oracle,
+        'value': amount,
+        'gasPrice': this.gasPrice,
+      }
+    )
+  );
+
+  return testSendSD;
+};
+
+CrucibleUtils.prototype.add = async function (crucible, participant, amount) {
+  return await this.addBySender(crucible, participant, participant, amount);
+};
+
 // cool trick to send funds to a contract, bypassing the fallback function
 CrucibleUtils.prototype.backdoorSend = async function (crucible, amount) {
   // make a new test send self-destruct contract
@@ -100,10 +127,6 @@ CrucibleUtils.prototype.backdoorSend = async function (crucible, amount) {
     balanceBefore.plus(amount).toNumber(),
     'contract balance correct'
   );
-};
-
-CrucibleUtils.prototype.add = async function (crucible, participant, amount) {
-  return await this.addBySender(crucible, participant, participant, amount);
 };
 
 CrucibleUtils.prototype.addDays = function (date, days) {
@@ -320,14 +343,14 @@ CrucibleUtils.prototype.assertUserBalances = async function (crucible, bal) {
   }
 };
 
-CrucibleUtils.prototype.assertContractBalance = async function (crucible, bal) {
+CrucibleUtils.prototype.assertContractBalance = async function (contract, bal) {
   if (bal === undefined || bal === 0) {
     bal = new BigNumber(0);
   }
 
-  var balance = await web3.eth.getBalance(crucible.address);
+  var balance = await web3.eth.getBalance(contract.address);
   assert.equal(
-    balance.toNumber(), bal.toNumber(), 'crucible balance is correct'
+    balance.toNumber(), bal.toNumber(), 'contract balance is correct'
   );
 };
 

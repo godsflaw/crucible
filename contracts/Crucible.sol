@@ -65,6 +65,9 @@ contract Crucible is Ownable {
   event FeeSent(
     address recipient, uint256 amount
   );
+  event FeeFailed(
+    address recipient, uint256 amount
+  );
   event FundsReceived(
     address fromAddress, uint256 amount
   );
@@ -74,10 +77,19 @@ contract Crucible is Ownable {
   event PaymentSent(
     address recipient, uint256 amount
   );
+  event PaymentFailed(
+    address recipient, uint256 amount
+  );
   event PenaltySent(
     address recipient, uint256 amount
   );
+  event PenaltyFailed(
+    address recipient, uint256 amount
+  );
   event RefundSent(
+    address recipient, uint256 amount
+  );
+  event RefundFailed(
     address recipient, uint256 amount
   );
 
@@ -86,27 +98,21 @@ contract Crucible is Ownable {
   //
 
   modifier inState(CrucibleState _state) {
-      require(
-          state == _state,
-          "Function cannot be called at this time."
-      );
-      _;
+    require(state == _state, "Function cannot be called at this time.");
+    _;
   }
 
   modifier inEitherState(CrucibleState _stateA, CrucibleState _stateB) {
-      require(
-          state == _stateA || state == _stateB,
-          "Function cannot be called at this time."
-      );
-      _;
+    require(
+      state == _stateA || state == _stateB,
+      "Function cannot be called at this time."
+    );
+    _;
   }
 
   modifier notInState(CrucibleState _state) {
-      require(
-          state != _state,
-          "Function cannot be called at this time."
-      );
-      _;
+    require(state != _state, "Function cannot be called at this time.");
+    _;
   }
 
   //
@@ -224,6 +230,18 @@ contract Crucible is Ownable {
     return (_hasBeneficiary() && !(penaltyPaid) && _canSend(penalty));
   }
 
+  function _effectStatePayout(address _participant, uint256 _payment) internal {
+    trackingBalance = trackingBalance.sub(_payment);
+    released = released.add(_payment);
+    commitments[_participant].amount = 0;
+  }
+
+  function _effectStateRefund(address _participant, uint256 _payment) internal {
+    trackingBalance = trackingBalance.sub(_payment);
+    reserve = reserve.sub(_payment);
+    commitments[_participant].amount = 0;
+  }
+
   function _hasBeneficiary() internal view returns(bool) {
     return (beneficiary != address(0x0));
   }
@@ -233,6 +251,9 @@ contract Crucible is Ownable {
 
     for (uint i = _startIndex; i < (_startIndex + _records); i++) {
       address participant = participants[i];
+      bool canSend = false;
+      uint256 payment = 0;
+      uint256 originalAmount = 0;
 
       if (commitments[participant].amount > 0) {
         if (commitments[participant].metGoal == GoalState.PASS) {
@@ -243,6 +264,7 @@ contract Crucible is Ownable {
           // again as the risked balance is still > 0.  Worst case, the
           // crucible gets marked as BROKEN, and the participant can call the
           // withdrawl function to get their risked amount back.
+
           uint256 totalFunds = trackingBalance
             .add(released)
             .sub(reserve)
@@ -258,15 +280,19 @@ contract Crucible is Ownable {
               .div(totalFunds);
           }
 
-          uint256 payment = commitments[participant].amount.add(bonus);
+          originalAmount = commitments[participant].amount;
+          payment = commitments[participant].amount.add(bonus);
+          canSend = _canSend(payment);
+          _effectStatePayout(participant, payment);
 
-          // The gas stipend should stop re-entrancy.
-          if (_canSend(payment) && participant.send(payment)) {
-            trackingBalance = trackingBalance.sub(payment);
-            released = released.add(payment);
+          if (_records == 1 && canSend && participant.call.value(payment)()) {
             emit PaymentSent(participant, payment);
-            commitments[participant].amount = 0;
+          } else if (canSend && participant.send(payment)) {
+            emit PaymentSent(participant, payment);
+          } else {
+            _resetStatePayout(participant, originalAmount, payment);
           }
+
         } else if (commitments[participant].metGoal == GoalState.WAITING) {
           // Refund all WAITING commitments since we never got a PASS/FAIL.
           // This is because the oracle likely never reported on the commitment.
@@ -284,13 +310,18 @@ contract Crucible is Ownable {
           // if the participant is an attacker, they simply won't be counted in
           // the total or profit, thus denying influence or reward of the bonus.
           // The gas stipend should stop re-entrancy.
-          if (_canSend(commitments[participant].amount) &&
-              participant.send(commitments[participant].amount)) {
-            trackingBalance =
-              trackingBalance.sub(commitments[participant].amount);
-            reserve = reserve.sub(commitments[participant].amount);
-            emit RefundSent(participant, commitments[participant].amount);
-            commitments[participant].amount = 0;
+
+          originalAmount = commitments[participant].amount;
+          payment = commitments[participant].amount;
+          canSend = _canSend(payment);
+          _effectStateRefund(participant, payment);
+
+          if (_records == 1 && canSend && participant.call.value(payment)()) {
+            emit RefundSent(participant, payment);
+          } else if (canSend && participant.send(payment)) {
+            emit RefundSent(participant, payment);
+          } else {
+            _resetStateRefund(participant, originalAmount, payment);
           }
         }
       }
@@ -309,6 +340,28 @@ contract Crucible is Ownable {
       penalty = penalty.add(delta);
       trackingBalance = trackingBalance.add(delta);
     }
+  }
+
+  function _resetStatePayout(
+    address _participant,
+    uint256 _resetAmount,
+    uint256 _payment
+  ) internal {
+    trackingBalance = trackingBalance.add(_payment);
+    released = released.sub(_payment);
+    commitments[_participant].amount = _resetAmount;
+    emit PaymentFailed(_participant, _payment);
+  }
+
+  function _resetStateRefund(
+    address _participant,
+    uint256 _resetAmount,
+    uint256 _payment
+  ) internal {
+    trackingBalance = trackingBalance.add(_payment);
+    reserve = reserve.add(_payment);
+    commitments[_participant].amount = _resetAmount;
+    emit RefundFailed(_participant, _payment);
   }
 
   //
@@ -371,20 +424,42 @@ contract Crucible is Ownable {
 
     _calculateFee();
 
+    bool canPayFee = _canPayFee();
+    bool canPayBeneficiary = _canPayBeneficiary();
+
+    // If there is no fee or penalty to pay, this function will still move
+    // feePaid and penaltyPaid to true.  However, if there is a fee or penalty
+    // to pay, then these two variables will only move to true once successfully
+    // paid.
+    feePaid = true;
+    penaltyPaid = true;
+
     // send the fee payment off if there is one
-    if (_canPayFee() && _destination.send(fee)) {
+    if (canPayFee && _destination.send(fee)) {
       trackingBalance = trackingBalance.sub(fee);
       released = released.add(fee);
-      feePaid = true;
       emit FeeSent(_destination, fee);
+    } else if (canPayFee) {
+      // if send() fails, we reset feePaid.  This is part of the check-effects
+      // pattern and sets a mutex that prevents reentrant collection of fees.
+      feePaid = false;
+      emit FeeFailed(_destination, fee);
     }
 
     // send the beneficiary payment off if there is one
-    if (_canPayBeneficiary() && beneficiary.send(penalty)) {
+    if (canPayBeneficiary && beneficiary.send(penalty)) {
       trackingBalance = trackingBalance.sub(penalty);
       released = released.add(penalty);
-      penaltyPaid = true;
       emit PenaltySent(beneficiary, penalty);
+    } else if (canPayBeneficiary) {
+      // If we failed to send() we can use this oportunity to reset the
+      // beneficiary to _destination so that the oracle can get those funds to
+      // the beneficiary.  If we don't do this, then this money is stuck in the
+      // contract forever.  NOTE: this function needs to be called again in
+      // order to actually send to _destination.
+      beneficiary = _destination;
+      penaltyPaid = false;
+      emit PenaltyFailed(beneficiary, penalty);
     }
 
     // possibly move to the paid state
@@ -397,6 +472,7 @@ contract Crucible is Ownable {
   function payout(uint _startIndex, uint _records)
     public
     inEitherState(CrucibleState.FINISHED, CrucibleState.BROKEN) {
+
 
     require(_records > 0, 'cannot request 0 records');
 
