@@ -10,6 +10,10 @@ steps:
 
   RunningUnitTests:
     title: Running Unit Tests
+    when:
+      branch:
+        only:
+          - master
     image: '${{BuildingDockerImage}}'
     working_directory: IMAGE_WORK_DIR
     entry_point:
@@ -49,7 +53,6 @@ steps:
       services:
         vault:
           image: r.cfcr.io/godsflaw/vault:sealed
-          privileged: true
     composition_candidates:
       test_service:
         image: '${{BuildingDockerImage}}'
