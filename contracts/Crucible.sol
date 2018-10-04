@@ -457,9 +457,9 @@ contract Crucible is Ownable {
       // the beneficiary.  If we don't do this, then this money is stuck in the
       // contract forever.  NOTE: this function needs to be called again in
       // order to actually send to _destination.
+      emit PenaltyFailed(beneficiary, penalty);
       beneficiary = _destination;
       penaltyPaid = false;
-      emit PenaltyFailed(beneficiary, penalty);
     }
 
     // possibly move to the paid state
