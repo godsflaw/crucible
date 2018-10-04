@@ -87,5 +87,4 @@ steps:
             - 8545
         vault:
           image: r.cfcr.io/godsflaw/vault:sealed
-          privileged: true
     environment_name: 'staging'
