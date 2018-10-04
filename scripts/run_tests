@@ -28,11 +28,14 @@ if [ "${CRUCIBLE_ENV}" == "development" ]; then
     CRUCIBLE_ARGS="$@"
   fi
 
-  truffle test --network ${CRUCIBLE_ENV} ${CRUCIBLE_ARGS} && pkill -f ganache-cli
+  truffle test --network ${CRUCIBLE_ENV} ${CRUCIBLE_ARGS} && \
+    pkill -f ganache-cli
 elif [ "${CRUCIBLE_ENV}" == "staging" ]; then
-  npm run ${CRUCIBLE_ENV} &
-  while ! /usr/bin/pgrep lite-server >/dev/null; do
-    sleep 1
-  done
-  truffle test --network ${CRUCIBLE_ENV} ./test/integration/*
+  if [ "$#" -eq 0 ]; then
+    CRUCIBLE_ARGS="./test/integration/*/*.js"
+  else
+    CRUCIBLE_ARGS="$@"
+  fi
+
+  truffle test --network ${CRUCIBLE_ENV} ${CRUCIBLE_ARGS}
 fi

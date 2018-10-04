@@ -137,6 +137,7 @@ contract Crucible is Ownable {
     }
 
     // set this if the penalty should be sent to a third party and not the pool
+    // to leave this unset, just send address(0x0).
     beneficiary = _beneficiary;
 
     require(

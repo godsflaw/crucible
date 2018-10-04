@@ -32,6 +32,7 @@ contract('Foundry - newCrucible', async (accounts) => {
       cu.minAmountWei,
       cu.timeout,
       cu.feeNumerator,
+      { 'from': address.owner }
     );
 
     truffleAssert.eventEmitted(tx, 'CrucibleCreated', async (ev) => {

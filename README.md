@@ -3,8 +3,15 @@
 ![Crucible](crucible.png)
 
 # crucible
-Crucible is a smart contract on the ethereum blockchain to enforce globally
-unique passwords.
+A crucible is a decentralized commitment contract designed to encourage
+self-improvement through the use of economic and phycological incentives like
+loss aversion, accountability, and peer pressure.
+
+This project is the core of the Crucible smart contract that lives on the
+ethereum blockchain.  Included in this repo is:
+* the Foundry contract for initiating and registering instances of new Crucibles
+* the Crucible contract code
+* extensive tests for all the above
 
 # Getting Started (development)
 
@@ -29,13 +36,8 @@ truffle migrate
 npm test
 ```
 
-## start server locally
-```
-npm run develpment
-```
-
-## start server in docker container
+## spin up in docker container
 ```
 docker build -t godsflaw/crucible:dev .
-docker run -p 3000:3000 -p 8545:8545 godsflaw/crucible:dev
+docker run godsflaw/crucible:dev
 ```

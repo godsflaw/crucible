@@ -22,6 +22,7 @@ crucible_start() {
   truffle migrate --network ${CRUCIBLE_ENV}
 
   # start up the server in the correct environment
+  # NOTE(godsflaw): this is a placeholder
   npm run ${CRUCIBLE_ENV}
 }
 

@@ -6,6 +6,8 @@ import "./Crucible.sol";
 contract Foundry is Ownable {
   address[] public crucibles;
 
+  event CrucibleCreated(address contractAddress);
+
   constructor() public {
     owner = msg.sender;
   }
@@ -50,7 +52,4 @@ contract Foundry is Ownable {
     return crucible;
   }
 
-  // TODO(godsflaw): add newCrucibleWithCommitment()
-
-  event CrucibleCreated(address contractAddress);
 }
