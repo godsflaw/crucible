@@ -55,6 +55,8 @@ steps:
           image: r.cfcr.io/godsflaw/vault:sealed
     composition_candidates:
       test_service:
+        depends_on:
+          - vault
         image: '${{BuildingDockerImage}}'
         env_file: ./env-staging
         command: sh -c 'npm test'
