@@ -1,3 +1,9 @@
 #!/bin/sh
 #
 #
+
+#
+# TODO(godsflaw): at some point, we should make the container spin up a server
+# that listends for events from the foundry and other crucible contracts.
+#
+tail -f ./scripts/noop
