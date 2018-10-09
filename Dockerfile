@@ -5,14 +5,20 @@ ENV CRICIBLE="/crucible"
 
 # drop codebase
 RUN mkdir -p ${CRICIBLE}
+
+ADD contracts ${CRICIBLE}/contracts
+ADD crucible.eps ${CRICIBLE}
+ADD crucible.png ${CRICIBLE}
+ADD env-production ${CRICIBLE}
+ADD env-staging ${CRICIBLE}
+ADD migrations ${CRICIBLE}/migrations
 ADD package-lock.json ${CRICIBLE}
 ADD package.json ${CRICIBLE}
-ADD truffle.js ${CRICIBLE}
-ADD env-staging ${CRICIBLE}
-ADD contracts ${CRICIBLE}/contracts
-ADD migrations ${CRICIBLE}/migrations
 ADD scripts ${CRICIBLE}/scripts
 ADD test ${CRICIBLE}/test
+ADD truffle.js ${CRICIBLE}
+ADD zos.json ${CRICIBLE}
+ADD zos.staging.json ${CRICIBLE}
 
 # install codebase
 RUN (cd ${CRICIBLE} ; npm install)
