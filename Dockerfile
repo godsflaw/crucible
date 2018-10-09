@@ -1,4 +1,4 @@
-FROM godsflaw/truffle:4.1
+FROM godsflaw/truffle:4.1.14
 MAINTAINER Christopher Mooney <chris@dod.net>
 
 ENV CRICIBLE="/crucible"
