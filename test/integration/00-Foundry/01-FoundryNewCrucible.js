@@ -9,21 +9,25 @@ contract('Foundry - newCrucible', async (accounts) => {
   let cu;
   let address;
   let foundry;
+  let oracle;
 
   beforeEach(async () => {
     cu = new CrucibleUtils();
     address = new Address();
-    foundry = await Foundry.new({ from: address.owner });
+    foundry = await Foundry.at(process.env.FOUNDRY_PROXY);
+    oracle = accounts[0];
   });
 
   afterEach(async () => {
   });
 
-  it('call Factory and check the new Crucible values', async () => {
+  it('make sure newCrucible works', async () => {
     var crucible;
 
+    var beforeCount = await foundry.getCount();
+
     var tx = await foundry.newCrucible(
-      address.oracle,
+      oracle,
       address.empty,
       cu.startDate(),
       cu.lockDate(),
@@ -31,7 +35,7 @@ contract('Foundry - newCrucible', async (accounts) => {
       cu.minAmountWei,
       cu.timeout,
       cu.feeNumerator,
-      { 'from': address.owner }
+      { 'from': oracle }
     );
 
     truffleAssert.eventEmitted(tx, 'CrucibleCreated', async (ev) => {
@@ -39,12 +43,17 @@ contract('Foundry - newCrucible', async (accounts) => {
     });
 
     var owner = await crucible.owner.call();
-    assert.equal(
-      owner, address.oracle, 'got crucible owner: ' + address.oracle
-    );
+    assert.equal(owner, oracle, 'got crucible owner: ' + oracle);
 
     var beneficiary = await crucible.beneficiary.call();
     assert.equal(beneficiary, address.empty, 'got crucible beneficiary');
+
+    var count = await foundry.getCount();
+    assert.equal(
+      count.toNumber(),
+      beforeCount.toNumber() + 1,
+      'count incremented'
+    );
 
     // try to get at the new contract from index 0 in the array.
     owner = undefined;
@@ -55,9 +64,7 @@ contract('Foundry - newCrucible', async (accounts) => {
     crucible = Crucible.at(crucibleAddr);
 
     owner = await crucible.owner.call();
-    assert.equal(
-      owner, address.oracle, 'got crucible owner: ' + address.oracle
-    );
+    assert.equal(owner, oracle, 'got crucible owner: ' + oracle);
 
     beneficiary = await crucible.beneficiary.call();
     assert.equal(beneficiary, address.empty, 'got crucible beneficiary');

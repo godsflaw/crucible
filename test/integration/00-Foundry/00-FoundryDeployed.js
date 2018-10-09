@@ -1,23 +1,20 @@
-var Foundry = artifacts.require("./Foundry.sol");
+const Foundry = artifacts.require("./Foundry.sol");
 
-contract('Foundry Deployed', async (accounts) => {
-  var foundry;
+contract('Foundry - Deployed', async (accounts) => {
+  let cu;
+  let address;
+  let foundry;
 
   beforeEach(async () => {
-    foundry = await Foundry.deployed();
+    foundry = await Foundry.at(process.env.FOUNDRY_PROXY);
   });
 
   afterEach(async () => {
-    foundry.kill({ 'from': accounts[0] });
   });
 
-  it('owner is correct', async () => {
-    var owner = await foundry.owner();
-    assert.equal(owner, accounts[0], 'owner is correct');
-  });
-
-  it('count is correct', async () => {
+  it('count is greater than 0', async () => {
+    // this will fail on the first run after init, but will work after that
     var count = await foundry.getCount();
-    assert.ok(count, 0, 'count is 0 crucibles');
+    assert.ok(count.toNumber() > 0, 'count is greater than 0');
   });
 });

@@ -1,0 +1,7 @@
+{
+  "name": "crucible",
+  "version": "0.0.1",
+  "contracts": {
+    "Foundry": "Foundry"
+  }
+}

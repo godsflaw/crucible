@@ -1,19 +1,14 @@
 pragma solidity ^0.4.24;
 
-import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "zos-lib/contracts/migrations/Migratable.sol";
 import "./Crucible.sol";
 
-contract Foundry is Ownable {
+contract Foundry is Migratable {
   address[] public crucibles;
 
   event CrucibleCreated(address contractAddress);
 
-  constructor() public {
-    owner = msg.sender;
-  }
-
-  function kill() external onlyOwner {
-    selfdestruct(owner);
+  function initialize() isInitializer("Foundry", "0") public {
   }
 
   // total number of Crucibles produced by the Foundry

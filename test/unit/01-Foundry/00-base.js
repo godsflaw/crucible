@@ -13,12 +13,10 @@ contract('Foundry - base', async (accounts) => {
   });
 
   afterEach(async () => {
-    await foundry.kill({ from: address.owner });
   });
 
-  it('should verify the owner', async () => {
-    var owner = await foundry.owner.call();
-    assert.equal(owner, address.owner, 'got owner: ' + address.owner);
+  it('has an address', async () => {
+    assert.ok(foundry.address !== address.empty, 'has an address');
   });
 
 });

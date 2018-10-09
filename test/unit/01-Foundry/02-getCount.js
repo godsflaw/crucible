@@ -18,13 +18,11 @@ contract('Foundry - getCount', async (accounts) => {
   });
 
   afterEach(async () => {
-    await foundry.kill({ from: address.owner });
   });
 
   it('Factory should start with 0 Crucibles', async () => {
-    var result = await foundry.getCount.call();
-    var crucibleCount = result.toNumber();
-    assert.equal(crucibleCount, 0, 'got correct crucibleCount');
+    var count = await foundry.getCount();
+    assert.equal(count.toNumber(), 0, 'got correct count');
   });
 
   it('new Crucible count is correct', async () => {
@@ -50,9 +48,8 @@ contract('Foundry - getCount', async (accounts) => {
       cu.feeNumerator,
     );
 
-    var result = await foundry.getCount.call();
-    var crucibleCount = result.toNumber();
-    assert.equal(crucibleCount, 2, 'got correct crucibleCount');
+    var count = await foundry.getCount.call();
+    assert.equal(count.toNumber(), 2, 'got correct count');
 
     await foundry.newCrucible(
       address.oracle,
@@ -65,8 +62,7 @@ contract('Foundry - getCount', async (accounts) => {
       cu.feeNumerator,
     );
 
-    result = await foundry.getCount.call();
-    crucibleCount = result.toNumber();
-    assert.equal(crucibleCount, 3, 'got correct crucibleCount');
+    count = await foundry.getCount.call();
+    assert.equal(count.toNumber(), 3, 'got correct count');
   });
 });

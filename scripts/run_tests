@@ -4,21 +4,31 @@
 
 CRUCIBLE_ENV="${CRUCIBLE_ENV:-development}"
 
-# if this is the staging env, then unseal the vault
-if [ "${CRUCIBLE_ENV}" == "staging" ]; then
-  ./scripts/vault_unseal.js
-fi
-
-# compile the solidity code
-truffle compile --network ${CRUCIBLE_ENV}
-
-# if this is the dev env, then startup a mock blockchain
 if [ "${CRUCIBLE_ENV}" == "development" ]; then
-  ./scripts/devchain
-fi
+  # if this is the staging env, then unseal the vault
+  ./scripts/vault_unseal.js
 
-# migrate contracts to the appropriate network
-truffle migrate --network ${CRUCIBLE_ENV} >/dev/null
+  # compile the solidity code
+  truffle compile --network ${CRUCIBLE_ENV}
+
+  # if this is the dev env, then startup a mock blockchain
+  ./scripts/devchain
+
+  # migrate contracts to the appropriate network
+  truffle migrate --network ${CRUCIBLE_ENV}
+else
+  # Use the following command to create the contract for the first time.
+  # Make sure you run ./env-staging or ./env-production first.  You should
+  # then set FOUNDRY_PROXY to the address from 'zos create'.
+  # zos add Foundry
+  # zos push --network staging
+  # zos create Foundry --init initialize --network staging
+  #
+
+  # this will push and update our contracts in staging or prod
+  zos push --network ${CRUCIBLE_ENV}
+  zos update Foundry --network ${CRUCIBLE_ENV}
+fi
 
 # run tests
 if [ "${CRUCIBLE_ENV}" == "development" ]; then
