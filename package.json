@@ -3,6 +3,10 @@
   "version": "0.0.1",
   "description": "a decentralized commitment contract",
   "main": "truffle.js",
+  "repository": {
+    "type" : "git",
+    "url" : "git@github.com:godsflaw/crucible.git"
+  },
   "directories": {
     "test": "test"
   },
