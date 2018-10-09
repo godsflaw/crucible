@@ -307,9 +307,9 @@ contract('Crucible - base', async (accounts) => {
       });
       assert(false, 'did not throw an error');
     } catch (err) {
-      assert.equal(
+      assert.match(
         err.message,
-        'VM Exception while processing transaction: revert',
+        /revert/,
         'fallback function should revert since we are not in OPEN state'
       );
     }
