@@ -12,9 +12,22 @@ contract('Foundry - newCrucible', async (accounts) => {
   let oracle;
 
   beforeEach(async () => {
+    var retry = true;
+
     cu = new CrucibleUtils();
     address = new Address();
-    foundry = await Foundry.at(process.env.FOUNDRY_PROXY);
+
+    while (retry) {
+      try {
+        retry = false;
+        foundry = await Foundry.at(process.env.FOUNDRY_PROXY);
+      } catch (err) {
+        if (err.message === 'Error: nonce too low') {
+          retry = true;
+        }
+      }
+    }
+
     oracle = accounts[0];
   });
 

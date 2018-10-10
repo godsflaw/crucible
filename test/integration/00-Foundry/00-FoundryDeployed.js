@@ -6,7 +6,18 @@ contract('Foundry - Deployed', async (accounts) => {
   let foundry;
 
   beforeEach(async () => {
-    foundry = await Foundry.at(process.env.FOUNDRY_PROXY);
+    var retry = true;
+
+    while (retry) {
+      try {
+        retry = false;
+        foundry = await Foundry.at(process.env.FOUNDRY_PROXY);
+      } catch (err) {
+        if (err.message === 'Error: nonce too low') {
+          retry = true;
+        }
+      }
+    }
   });
 
   afterEach(async () => {
