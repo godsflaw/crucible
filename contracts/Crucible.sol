@@ -6,7 +6,7 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 contract Crucible is Ownable {
   using SafeMath for uint256;
 
-  bytes8 public version = "0.0.1";
+  bytes8 public version = "0.1.0";
 
   address public beneficiary;
   bool public calculateFee = false;

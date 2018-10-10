@@ -22,25 +22,36 @@ contract('Crucible - version', async (accounts) => {
   });
 
   it('check that crucible version exists and is correct', async () => {
-    var crucible;
+    var retry = true;
 
-    var tx = await foundry.newCrucible(
-      oracle,
-      address.empty,
-      cu.startDate(),
-      cu.lockDate(),
-      cu.endDate(),
-      cu.minAmountWei,
-      cu.timeout,
-      cu.feeNumerator,
-      { 'from': oracle }
-    );
+    while (retry) {
+      try {
+        retry = false
+        var crucible;
 
-    truffleAssert.eventEmitted(tx, 'CrucibleCreated', async (ev) => {
-      crucible = Crucible.at(ev.contractAddress);
-    });
+        var tx = await foundry.newCrucible(
+          oracle,
+          address.empty,
+          cu.startDate(),
+          cu.lockDate(),
+          cu.endDate(),
+          cu.minAmountWei,
+          cu.timeout,
+          cu.feeNumerator,
+          { 'from': oracle }
+        );
 
-    var version = await crucible.version.call();
-    assert.match(web3.toAscii(version), /0.0.1/, 'got correct version');
+        truffleAssert.eventEmitted(tx, 'CrucibleCreated', async (ev) => {
+          crucible = Crucible.at(ev.contractAddress);
+        });
+
+        var version = await crucible.version.call();
+        assert.match(web3.toAscii(version), /0.0.1/, 'got correct version');
+      } catch (err) {
+        if (err.message === 'Error: nonce too low') {
+          retry = true;
+        }
+      }
+    }
   });
 });

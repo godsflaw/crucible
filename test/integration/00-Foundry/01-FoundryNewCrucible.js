@@ -22,51 +22,62 @@ contract('Foundry - newCrucible', async (accounts) => {
   });
 
   it('make sure newCrucible works', async () => {
-    var crucible;
+    var retry = true;
 
-    var beforeCount = await foundry.getCount();
+    while (retry) {
+      try {
+        retry = false;
+        var crucible;
 
-    var tx = await foundry.newCrucible(
-      oracle,
-      address.empty,
-      cu.startDate(),
-      cu.lockDate(),
-      cu.endDate(),
-      cu.minAmountWei,
-      cu.timeout,
-      cu.feeNumerator,
-      { 'from': oracle }
-    );
+        var beforeCount = await foundry.getCount();
 
-    truffleAssert.eventEmitted(tx, 'CrucibleCreated', async (ev) => {
-      crucible = Crucible.at(ev.contractAddress);
-    });
+        var tx = await foundry.newCrucible(
+          oracle,
+          address.empty,
+          cu.startDate(),
+          cu.lockDate(),
+          cu.endDate(),
+          cu.minAmountWei,
+          cu.timeout,
+          cu.feeNumerator,
+          { 'from': oracle }
+        );
 
-    var owner = await crucible.owner.call();
-    assert.equal(owner, oracle, 'got crucible owner: ' + oracle);
+        truffleAssert.eventEmitted(tx, 'CrucibleCreated', async (ev) => {
+          crucible = Crucible.at(ev.contractAddress);
+        });
 
-    var beneficiary = await crucible.beneficiary.call();
-    assert.equal(beneficiary, address.empty, 'got crucible beneficiary');
+        var owner = await crucible.owner.call();
+        assert.equal(owner, oracle, 'got crucible owner: ' + oracle);
 
-    var count = await foundry.getCount();
-    assert.equal(
-      count.toNumber(),
-      beforeCount.toNumber() + 1,
-      'count incremented'
-    );
+        var beneficiary = await crucible.beneficiary.call();
+        assert.equal(beneficiary, address.empty, 'got crucible beneficiary');
 
-    // try to get at the new contract from index 0 in the array.
-    owner = undefined;
-    beneficiary = undefined;
-    crucible = undefined;
+        var count = await foundry.getCount();
+        assert.equal(
+          count.toNumber(),
+          beforeCount.toNumber() + 1,
+          'count incremented'
+        );
 
-    var crucibleAddr = await foundry.crucibles.call(0);
-    crucible = Crucible.at(crucibleAddr);
+        // try to get at the new contract from index 0 in the array.
+        owner = undefined;
+        beneficiary = undefined;
+        crucible = undefined;
 
-    owner = await crucible.owner.call();
-    assert.equal(owner, oracle, 'got crucible owner: ' + oracle);
+        var crucibleAddr = await foundry.crucibles.call(0);
+        crucible = Crucible.at(crucibleAddr);
 
-    beneficiary = await crucible.beneficiary.call();
-    assert.equal(beneficiary, address.empty, 'got crucible beneficiary');
+        owner = await crucible.owner.call();
+        assert.equal(owner, oracle, 'got crucible owner: ' + oracle);
+
+        beneficiary = await crucible.beneficiary.call();
+        assert.equal(beneficiary, address.empty, 'got crucible beneficiary');
+      } catch (err) {
+        if (err.message === 'Error: nonce too low') {
+          retry = true;
+        }
+      }
+    }
   });
 });
