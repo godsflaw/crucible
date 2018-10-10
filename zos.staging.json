@@ -1,0 +1,29 @@
+{
+  "contracts": {
+    "Foundry": {
+      "address": "0x35b543f8e3c6f7c627dfd57853dde0b74e940a72",
+      "constructorCode": "608060405234801561001057600080fd5b5061475c806100206000396000f300",
+      "bodyBytecodeHash": "3bce446b586996287a45df7a5dc58952b4165b2d5415ad5193a90e7d22a56352",
+      "bytecodeHash": "c3a23382ad14fe5233d7d4c6135aa700738b243c4242be7fb6795c22fe3a18a1"
+    }
+  },
+  "proxies": {
+    "Foundry": [
+      {
+        "address": "0xc01d7422aba961c8a48bc73a8c195d479e06eb41",
+        "version": "0.1.0",
+        "implementation": "0x35b543f8e3c6f7c627dfd57853dde0b74e940a72"
+      }
+    ]
+  },
+  "app": {
+    "address": "0x1b94f11d2448571b87a261fc5b80a36838fb3b4b"
+  },
+  "version": "0.1.0",
+  "package": {
+    "address": "0xa1696a290d8e2bbaaa711e4b9795a1611a386144"
+  },
+  "provider": {
+    "address": "0x476e04e8f2d757dd41c5bf49317b30548d91ce9b"
+  }
+}

@@ -18,6 +18,7 @@ ADD scripts ${CRICIBLE}/scripts
 ADD test ${CRICIBLE}/test
 ADD truffle.js ${CRICIBLE}
 ADD zos.json ${CRICIBLE}
+ADD zos.staging.json ${CRICIBLE}
 
 # install codebase
 RUN (cd ${CRICIBLE} ; npm install)

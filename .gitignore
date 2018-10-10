@@ -56,9 +56,3 @@ typings/
 
 # dotenv environment variables file
 .env
-
-# ZOS environments are auto generated off zos.json
-zos.development.json
-zos.staging.json
-zos.production.json
-
