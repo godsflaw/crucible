@@ -4,15 +4,14 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor i
 
 # Contribution Checklist
 
-- [ ] first commit title starts with 'ISSUE-N:'
+- [ ] first commit title starts with 'CRUCIBLE-N:'
 - [ ] code approved
 - [ ] tests approved
-- [ ] documentation approved
 
 # Solidity Checklist
 
 - [ ] every contract variable explicitly declared as public/private
-- [ ] every contract method explicitly declared as public/private
+- [ ] every contract method explicitly declared as public/external private/internal
 - [ ] make sure constructor can only be called once
 - [ ] [does not use random numbers](https://solidity.readthedocs.io/en/develop/security-considerations.html#private-information-and-randomness)
 - [ ] [reviewed for re-entrancy bugs](https://solidity.readthedocs.io/en/develop/security-considerations.html#re-entrancy)
@@ -20,7 +19,7 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor i
 - [ ] [be mindful of 1024 depth call stack](https://solidity.readthedocs.io/en/develop/security-considerations.html#callstack-depth)
 - [ ] [never use tx.origin for authorization](https://solidity.readthedocs.io/en/develop/security-considerations.html#tx-origin)
 - [ ] [make sure for loop counters are correct size](https://solidity.readthedocs.io/en/develop/security-considerations.html#minor-details)
-- [ ] [make sure constant functions do NOT mutate state](https://solidity.readthedocs.io/en/develop/security-considerations.html#minor-details)
+- [ ] [make sure constant/view functions do NOT mutate state](https://solidity.readthedocs.io/en/develop/security-considerations.html#minor-details)
 - [ ] [make sure we don't have dirty bits](https://solidity.readthedocs.io/en/develop/security-considerations.html#minor-details)
 - [ ] [always limit the amount of ETH or other tokens](https://solidity.readthedocs.io/en/develop/security-considerations.html#restrict-the-amount-of-ether)
 - [ ] [make sure all functions apply the checks-effects pattern](https://solidity.readthedocs.io/en/develop/security-considerations.html#use-the-checks-effects-interactions-pattern)

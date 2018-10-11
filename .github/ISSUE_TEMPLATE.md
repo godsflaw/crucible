@@ -4,10 +4,9 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor i
 
 # PR must contain
 
-* a first commit title that starts with 'ISSUE-N:'
+* a first commit title that starts with 'CRUCIBLE-N:'
 * code
 * tests
-* documentation
 
 # Example PR
 https://github.com/godsflaw/crucible/pull/1
