@@ -5,6 +5,7 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor i
 # Contribution Checklist
 
 - [ ] first commit title starts with 'CRUCIBLE-N:'
+- [ ] fixes #(fill in issue number)
 - [ ] code approved
 - [ ] tests approved
 
