@@ -9,7 +9,7 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor i
 * tests
 
 # Example PR
-https://github.com/godsflaw/crucible/pull/1
+https://github.com/godsflaw/crucible/pull/2
 
 # Bounty
 None
