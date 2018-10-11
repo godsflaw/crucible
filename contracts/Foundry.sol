@@ -27,7 +27,7 @@ contract Foundry is Migratable, Ownable {
     return crucibles.length;
   }
 
-  // total number of Crucibles produced by the Foundry
+  // find the index of a crucible in the list
   function getIndexOf(address _crucible)
     external
     view
@@ -69,7 +69,7 @@ contract Foundry is Migratable, Ownable {
     return crucible;
   }
 
-  // Delete a crucible from the list, but shuffle the list to there are
+  // Delete a crucible from the list, but shuffle the list so there are
   // no empty slots.
   function deleteCrucible(address _address, uint _index) external onlyOwner {
     require(crucibles.length > 0, "crucible list isn't empty");

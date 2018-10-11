@@ -234,7 +234,7 @@ contract('Foundry - deleteCrucible', async (accounts) => {
     await expectThrow(foundry.deleteCrucible(crucible3.address, 2), EVMThrow);
   });
 
-  it('throws if we index and address mismatch', async () => {
+  it('throws if index and address mismatch', async () => {
     var crucible1;
     var crucible2;
     var crucible3;
