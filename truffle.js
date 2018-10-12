@@ -10,6 +10,9 @@ const FilterSubprovider =
   require('web3-provider-engine/subproviders/filters.js');
 
 if (process.env.CRUCIBLE_ENV === 'staging') {
+  // unseal the vault
+  child_process.execSync('./scripts/vault_unseal.js');
+
   // Get our mnemonic and create an hdwallet
   var mnemonic = child_process.execSync(
     './scripts/vault_get_mnemonic.js'

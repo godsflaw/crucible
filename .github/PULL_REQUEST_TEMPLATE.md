@@ -6,6 +6,7 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor i
 
 - [ ] first commit title starts with 'CRUCIBLE-N:'
 - [ ] fixes #(fill in issue number)
+- [ ] version bumped if a contract changed
 - [ ] code approved
 - [ ] tests approved
 

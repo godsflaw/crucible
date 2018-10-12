@@ -1,0 +1,7 @@
+#!/bin/sh
+
+OLD_VERSION=`egrep '"version":' ./zos.json | awk -F' ' '{ print $2 }' | sed -E 's/",?//g'`
+NEW_VERSION=`egrep '"version":' ./package.json | awk -F' ' '{ print $2 }' | sed -E 's/",?//g'`
+
+sed -i -e 's/${OLD_VERSION}/${NEW_VERSION}/g' ./zos.json
+sed -i -e 's/${OLD_VERSION}/${NEW_VERSION}/g' ./contracts/Crucible.sol

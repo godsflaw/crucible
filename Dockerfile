@@ -24,7 +24,7 @@ ADD zos.staging.json ${CRICIBLE}
 RUN (cd ${CRICIBLE} ; npm install)
 
 # any ports we want to expose
-EXPOSE 8545
+# EXPOSE 8545
 
 # run the tests
 WORKDIR "${CRICIBLE}"
