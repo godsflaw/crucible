@@ -41,3 +41,10 @@ npm test
 docker build -t godsflaw/crucible:dev .
 docker run godsflaw/crucible:dev
 ```
+
+## version bump before PR is merged to dev
+
+You need to update the version in package.json, then run the following:
+```
+./scripts/version_bump
+```
