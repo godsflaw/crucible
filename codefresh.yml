@@ -121,7 +121,7 @@ steps:
           - '${{BuildingDockerImage.imageId}}':
             - CF_QUALITY: false
 
-  LaunchingProductio:
+  LaunchingProduction:
     type: launch-composition
     when:
       branch:
