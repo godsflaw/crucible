@@ -10,10 +10,6 @@ steps:
 
   RunningUnitTests:
     title: Running Unit Tests
-    when:
-      branch:
-        only:
-          - dev
     image: '${{BuildingDockerImage}}'
     working_directory: IMAGE_WORK_DIR
     entry_point:
