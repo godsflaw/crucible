@@ -90,3 +90,53 @@ steps:
         vault:
           image: r.cfcr.io/godsflaw/vault:sealed
     environment_name: 'staging'
+
+  RunningProductionTests:
+    type: composition
+    title: Running Production Tests
+    when:
+      branch:
+        only:
+          - master
+    composition:
+      version: '2'
+      services:
+        vault:
+          image: r.cfcr.io/godsflaw/vault:production-sealed
+    composition_candidates:
+      test_service:
+        depends_on:
+          - vault
+        image: '${{BuildingDockerImage}}'
+        env_file: ./env-production
+        command: sh -c 'npm test'
+    on_success:
+      metadata:
+        set:
+          - '${{BuildingDockerImage.imageId}}':
+            - CF_QUALITY: true
+    on_fail:
+      metadata:
+        set:
+          - '${{BuildingDockerImage.imageId}}':
+            - CF_QUALITY: false
+
+  LaunchingStaging:
+    type: launch-composition
+    when:
+      branch:
+        only:
+          - master
+    composition:
+      version: '2'
+      services:
+        crucible:
+          depends_on:
+            - vault
+          image: '${{BuildingDockerImage}}'
+          env_file: ./env-production
+          ports:
+            - 8545
+        vault:
+          image: r.cfcr.io/godsflaw/vault:production-sealed
+    environment_name: 'production'

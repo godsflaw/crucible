@@ -22,7 +22,8 @@ else
   # then set FOUNDRY_PROXY to the address from 'zos create'.
   # zos add Foundry
   # zos push --network staging
-  # zos create Foundry --init initialize --network staging
+  # zos create Foundry --init initialize \
+  #   --args "0x7af77b0d604D13a41e6d0f2175D8a61d5f1115C9" --network staging
   #
 
   # this will push and update our contracts in staging or prod
