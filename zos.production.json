@@ -1,7 +1,7 @@
 {
   "contracts": {
     "Foundry": {
-      "address": "0x74ed9c48d0d4508abc456b72a0e71daa008afa21",
+      "address": "0x376c6267f936cb53f8b46e01dde227e81377b1b1",
       "constructorCode": "608060405233600160006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff1602179055506154fb806100546000396000f300",
       "bodyBytecodeHash": "eadf18f7d4fbf545f2a7959e577c5d6ba15afca3d9b49ade4b83024a546d10b9",
       "bytecodeHash": "fcf9c033650cf695e55106c53c7125107c686a8a483a8ab4f515444fb979d170"
@@ -10,20 +10,20 @@
   "proxies": {
     "Foundry": [
       {
-        "address": "0x0108bfd0929be71ea1a836f829a2d95290bef88f",
+        "address": "0xdf04f6f312c88198cf29ff5175f3f980828bf334",
         "version": "1.0.0",
-        "implementation": "0x74ed9c48d0d4508abc456b72a0e71daa008afa21"
+        "implementation": "0x376c6267f936cb53f8b46e01dde227e81377b1b1"
       }
     ]
   },
   "app": {
-    "address": "0xa8606ebabd64d3f0de8deb60fef18bfedfa581df"
+    "address": "0x7491c4dbe26109410eba37302855b06324cdd68a"
   },
   "version": "1.0.0",
   "package": {
-    "address": "0x510adcf7e2c88dd69983c1d4859e927aee9c720f"
+    "address": "0x7dd6d2ada496b353ce66c146fd30308d43f7b572"
   },
   "provider": {
-    "address": "0x5f6d6747201ee16e4f96e5794f259238f528b89d"
+    "address": "0x04ec3597d3354bb58bcf7ebe7f61230a0a99bc77"
   }
 }

@@ -1,6 +1,5 @@
 "use strict";
 
-const Web3 = require('web3');
 const BigNumber = web3.BigNumber;
 const Address = require('./address');
 const assert = require('chai').assert

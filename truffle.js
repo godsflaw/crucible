@@ -1,15 +1,27 @@
-var child_process = require('child_process');
-var bip39 = require('bip39');
-var hdkey = require('ethereumjs-wallet/hdkey');
-var ProviderEngine = require('web3-provider-engine');
-var WalletSubprovider = require('web3-provider-engine/subproviders/wallet.js');
-var Web3Subprovider = require('web3-provider-engine/subproviders/web3.js');
-var Web3 = require('web3');
+const child_process = require('child_process');
+const bip39 = require('bip39');
+const hdkey = require('ethereumjs-wallet/hdkey');
+const ProviderEngine = require('web3-provider-engine');
+const WalletSubprovider = require('web3-provider-engine/subproviders/wallet.js');
+const Web3Subprovider = require('web3-provider-engine/subproviders/web3.js');
+const Web3 = require('web3');
 
 const FilterSubprovider =
   require('web3-provider-engine/subproviders/filters.js');
 
-if (process.env.CRUCIBLE_ENV === 'staging') {
+var web3 = new Web3();
+var environment = process.env.CRUCIBLE_ENV || 'development';
+var providerUrl;
+
+if (environment === 'production') {
+  providerUrl = 'https://mainnet.infura.io/';
+} else if (environment === 'staging') {
+  providerUrl = 'https://rinkeby.infura.io/';
+} else {
+  providerUrl = 'https://rinkeby.infura.io/';
+}
+
+if (environment !== 'development') {
   // unseal the vault
   child_process.execSync('./scripts/vault_unseal.js');
 
@@ -25,7 +37,6 @@ if (process.env.CRUCIBLE_ENV === 'staging') {
   var address = '0x' + wallet.getAddress().toString('hex');
 
   // build the provider engine
-  var providerUrl = 'https://rinkeby.infura.io/';
   var engine = new ProviderEngine();
 
   // engine filters
@@ -45,14 +56,16 @@ module.exports = {
       network_id: "*"   // Match any network id
     },
     staging: {
-      provider: engine, // Use our custom provider
-      from: address,    // Use the address we derived
+      provider: engine,
+      from: address,
+      gasPrice: web3.toWei('5', 'gwei'),
       network_id: '4',  // Official rinkeby network id
     },
     production: {
-      host: "localhost",
-      port: 8545,
-      network_id: "1"   // Main Ethereum Network
+      provider: engine,
+      from: address,
+      gasPrice: web3.toWei('5', 'gwei'),
+      network_id: "1",  // Main Ethereum Network
     }
   },
   rpc: {

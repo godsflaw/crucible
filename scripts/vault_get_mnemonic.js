@@ -14,7 +14,9 @@ async function get_mnemonic() {
   try {
     // get new instance of the client
     var vault = require('node-vault')(vault_options);
-    var ret = await vault.read('secret/network/staging/seed');
+    var ret = await vault.read(
+      'secret/network/' + process.env.CRUCIBLE_ENV + '/seed'
+    );
     mnemonic = ret.data.key;
   } catch (err) {
     console.log(err);

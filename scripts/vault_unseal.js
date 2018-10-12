@@ -2,7 +2,7 @@
 
 'use strict';
 
-if (process.env.CRUCIBLE_ENV === 'staging') {
+if (process.env.CRUCIBLE_ENV !== 'development') {
   var vault_options = {
     apiVersion: 'v1',
     endpoint: process.env.VAULT_ADDR,

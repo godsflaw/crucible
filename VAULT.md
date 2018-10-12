@@ -88,24 +88,28 @@ these keys are never held all in the same place.  For staging, it is relatively
 harmless to put these three keys in a configuration file; however, DO NOT use
 the same mnemonic that you use for production or any other sensitive project.
 
-## once in the shell you must initialize vault and seal it (terminal #3)
-Use the mnemonic words we generated and saved earlier to be stored in the vault.
-
-```
-vault write secret/network/staging/seed key="<MNEMONIC WORDS>"
-vault seal
-```
-The last command sealed the vault.  Next we will attempt to unseal it.
-
 ## edit `./env-staging` and run it (terminal #2)
 
-back to `terminal #2` add three of the vault keys from `vault init` to the
-`./env-staging` script.
+back to `terminal #2` add three of the vault keys (as UNSEAL_KEY1, UNSEAL_KEY2,
+UNSEAL_KEY3) and the root token (as SEED_TOKEN) from `vault init` to the
+`./env-staging` script.  Run that and unseal the vault.
 
 ```
 vi env-staging
 ./env-staging
+./scripts/vault_unseal.js
 ```
+
+## once in the shell you must initialize vault and seal it (terminal #3)
+Use the mnemonic words we generated and saved earlier to be stored in the vault.
+You must run `vault auth` and provide the root token.
+
+```
+vault auth
+vault write secret/network/staging/seed key="<MNEMONIC WORDS>"
+vault seal
+```
+The last command sealed the vault.  Next we will attempt to unseal it again.
 
 ## test that you can unseal and get the nmemonic (terminal #2)
 
