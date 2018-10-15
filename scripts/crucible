@@ -5,21 +5,19 @@
 CRUCIBLE_ENV="${CRUCIBLE_ENV:-development}"
 
 crucible_start() {
-  # if this is the staging env, then unseal the vault
-  if [ "${CRUCIBLE_ENV}" == "staging" ]; then
+  if [ "${CRUCIBLE_ENV}" == "development" ]; then
+    # compile the solidity code
+    truffle compile --network ${CRUCIBLE_ENV}
+
+    # if this is the dev env, then startup a mock blockchain
+    ./scripts/devchain
+
+    # migrate contracts to the appropriate network
+    truffle migrate --network ${CRUCIBLE_ENV}
+  else
+    # if this is the staging env, then unseal the vault
     ./scripts/vault_unseal.js
   fi
-
-  # compile the solidity code
-  truffle compile --network ${CRUCIBLE_ENV}
-
-  # if this is the dev env, then startup a mock blockchain
-  if [ "${CRUCIBLE_ENV}" == "development" ]; then
-    ./scripts/devchain
-  fi
-
-  # migrate contracts to the appropriate network
-  truffle migrate --network ${CRUCIBLE_ENV}
 
   # start up the server in the correct environment
   # NOTE(godsflaw): this is a placeholder

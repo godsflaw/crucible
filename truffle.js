@@ -2,8 +2,9 @@ const child_process = require('child_process');
 const bip39 = require('bip39');
 const hdkey = require('ethereumjs-wallet/hdkey');
 const ProviderEngine = require('web3-provider-engine');
-const WalletSubprovider = require('web3-provider-engine/subproviders/wallet.js');
-const Web3Subprovider = require('web3-provider-engine/subproviders/web3.js');
+const WalletSubprovider = require('web3-provider-engine/subproviders/wallet');
+const NonceSubprovider = require("web3-provider-engine/subproviders/nonce-tracker");
+const Web3Subprovider = require('web3-provider-engine/subproviders/web3');
 const Web3 = require('web3');
 
 const FilterSubprovider =
@@ -42,6 +43,7 @@ if (environment !== 'development') {
   // engine filters
   engine.addProvider(new FilterSubprovider());
   engine.addProvider(new WalletSubprovider(wallet, {}));
+  engine.addProvider(new NonceSubprovider());
   engine.addProvider(
     new Web3Subprovider(new Web3.providers.HttpProvider(providerUrl))
   );
@@ -58,13 +60,13 @@ module.exports = {
     staging: {
       provider: engine,
       from: address,
-      gasPrice: web3.toWei('5', 'gwei'),
+      gasPrice: web3.toWei('100', 'gwei'),
       network_id: '4',  // Official rinkeby network id
     },
     production: {
       provider: engine,
       from: address,
-      gasPrice: web3.toWei('5', 'gwei'),
+      gasPrice: web3.toWei('10', 'gwei'),
       network_id: "1",  // Main Ethereum Network
     }
   },

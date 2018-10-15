@@ -12,22 +12,9 @@ contract('Crucible - version', async (accounts) => {
   let oracle;
 
   beforeEach(async () => {
-    var retry = true;
-
     cu = new CrucibleUtils();
     address = new Address();
-
-    while (retry) {
-      try {
-        retry = false;
-        foundry = await Foundry.at(process.env.FOUNDRY_PROXY);
-      } catch (err) {
-        if (err.message === 'Error: nonce too low') {
-          retry = true;
-        }
-      }
-    }
-
+    foundry = await Foundry.at(process.env.FOUNDRY_PROXY);
     oracle = accounts[0];
   });
 
@@ -35,36 +22,25 @@ contract('Crucible - version', async (accounts) => {
   });
 
   it('check that crucible version exists and is correct', async () => {
-    var retry = true;
+    var crucible;
 
-    while (retry) {
-      try {
-        retry = false
-        var crucible;
+    var tx = await foundry.newCrucible(
+      oracle,
+      address.empty,
+      cu.startDate(),
+      cu.lockDate(),
+      cu.endDate(),
+      cu.minAmountWei,
+      cu.timeout,
+      cu.feeNumerator,
+      { 'from': oracle }
+    );
 
-        var tx = await foundry.newCrucible(
-          oracle,
-          address.empty,
-          cu.startDate(),
-          cu.lockDate(),
-          cu.endDate(),
-          cu.minAmountWei,
-          cu.timeout,
-          cu.feeNumerator,
-          { 'from': oracle }
-        );
+    truffleAssert.eventEmitted(tx, 'CrucibleCreated', async (ev) => {
+      crucible = Crucible.at(ev.contractAddress);
+    });
 
-        truffleAssert.eventEmitted(tx, 'CrucibleCreated', async (ev) => {
-          crucible = Crucible.at(ev.contractAddress);
-        });
-
-        var version = await crucible.version.call();
-        assert.match(web3.toAscii(version), /0.0.1/, 'got correct version');
-      } catch (err) {
-        if (err.message === 'Error: nonce too low') {
-          retry = true;
-        }
-      }
-    }
+    var version = await crucible.version.call();
+    assert.equal(web3.toUtf8(version).trim(), '1.0.0', 'got correct version');
   });
 });

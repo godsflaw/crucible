@@ -3,14 +3,16 @@
 OLD_VERSION=`egrep '"version":' ./zos.json | awk -F' ' '{ print $2 }' | sed -E 's/",?//g'`
 NEW_VERSION=`egrep '"version":' ./package.json | awk -F' ' '{ print $2 }' | sed -E 's/",?//g'`
 
-if [ "${OLD_VERSION}" = "${NEW_VERSION}" ]; then
-  echo "Versions didn't change"
+if [ "${OLD_VERSION}" == "${NEW_VERSION}" ]; then
+  echo "Version didn't change"
   exit 1
 fi
 
 sed -i'.bak' -e 's/${OLD_VERSION}/${NEW_VERSION}/g' ./contracts/Crucible.sol && \
   rm ./contracts/Crucible.sol.bak
 
-zos bump ${NEW_VERSION} && \
- git commit -a -m"VERSION-${NEW_VERSION}" && \
- git push
+sed -i'.bak' -e 's/${OLD_VERSION}/${NEW_VERSION}/g' \
+  ./test/integration/01-Crucible/00-CrucibleVersion.js && \
+  rm ./test/integration/01-Crucible/00-CrucibleVersion.js.bak
+
+zos bump ${NEW_VERSION}
