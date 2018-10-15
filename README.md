@@ -48,3 +48,5 @@ You need to update the version in package.json, then run the following:
 ```
 ./scripts/version_bump
 ```
+
+Make sure you veryfiy the diff and push this to your PR

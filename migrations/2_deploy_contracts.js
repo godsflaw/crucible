@@ -1,11 +1,10 @@
 var Foundry = artifacts.require('Foundry');
 
 module.exports = (deployer) => {
-  var foundry;
   var env = process.env.CRUCIBLE_ENV;
 
   // for staging and production, the migration is handled by zos.
-  if (env === undefined) {
+  if (env === 'development') {
     deployer.deploy(Foundry);
   }
 };

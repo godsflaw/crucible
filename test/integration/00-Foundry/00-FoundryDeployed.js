@@ -6,21 +6,18 @@ contract('Foundry - Deployed', async (accounts) => {
   let foundry;
 
   beforeEach(async () => {
-    var retry = true;
-
-    while (retry) {
-      try {
-        retry = false;
-        foundry = await Foundry.at(process.env.FOUNDRY_PROXY);
-      } catch (err) {
-        if (err.message === 'Error: nonce too low') {
-          retry = true;
-        }
-      }
-    }
+    foundry = await Foundry.at(process.env.FOUNDRY_PROXY);
   });
 
   afterEach(async () => {
+  });
+
+  it('owner is 0x7af77b0d604d13a41e6d0f2175d8a61d5f1115c9', async () => {
+    // this will fail on the first run after init, but will work after that
+    var owner = await foundry.owner.call();
+    assert.equal(
+      owner, '0x7af77b0d604d13a41e6d0f2175d8a61d5f1115c9',  'owner is correct'
+    );
   });
 
   it('count is greater than 0', async () => {

@@ -4,6 +4,9 @@
 
 CRUCIBLE_ENV="${CRUCIBLE_ENV:-development}"
 
+#
+# deploy
+#
 if [ "${CRUCIBLE_ENV}" == "development" ]; then
   # compile the solidity code
   truffle compile --network ${CRUCIBLE_ENV}
@@ -26,12 +29,21 @@ else
   #   --args "0x7af77b0d604D13a41e6d0f2175D8a61d5f1115C9" --network staging
   #
 
+  OLD_VERSION=`egrep '^  "version":' ./zos.${CRUCIBLE_ENV}.json | awk -F' ' '{ print $2 }' | sed -E 's/",?//g'`
+  NEW_VERSION=`egrep '^  "version":' ./zos.json | awk -F' ' '{ print $2 }' | sed -E 's/",?//g'`
+
   # this will push and update our contracts in staging or prod
-  zos push --network ${CRUCIBLE_ENV}
-  zos update Foundry --network ${CRUCIBLE_ENV}
+  if [ "${OLD_VERSION}" != "${NEW_VERSION}" ]; then
+    echo "version changed, updating contracts on chain..."
+    zos push --network ${CRUCIBLE_ENV}
+    zos update Foundry --network ${CRUCIBLE_ENV}
+    # TODO(godsflaw): commit updates to zos.ENVIRONMENT.json
+  fi
 fi
 
+#
 # run tests
+#
 if [ "${CRUCIBLE_ENV}" == "development" ]; then
   if [ "$#" -eq 0 ]; then
     CRUCIBLE_ARGS="./test/unit/*/*.js"
@@ -49,4 +61,13 @@ elif [ "${CRUCIBLE_ENV}" == "staging" ]; then
   fi
 
   truffle test --network ${CRUCIBLE_ENV} ${CRUCIBLE_ARGS}
+elif [ "${CRUCIBLE_ENV}" == "production" ]; then
+  if [ "$#" -eq 0 ]; then
+    CRUCIBLE_ARGS="./test/production/*/*.js"
+  else
+    CRUCIBLE_ARGS="$@"
+  fi
+
+  truffle test --network ${CRUCIBLE_ENV} ${CRUCIBLE_ARGS}
 fi
+
