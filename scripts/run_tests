@@ -9,13 +9,15 @@ CRUCIBLE_ENV="${CRUCIBLE_ENV:-development}"
 #
 if [ "${CRUCIBLE_ENV}" == "development" ]; then
   # compile the solidity code
-  truffle compile --network ${CRUCIBLE_ENV}
+  truffle compile --network ${CRUCIBLE_ENV} && \
+    ./scripts/devchain && \
+    truffle migrate --network ${CRUCIBLE_ENV}
 
-  # if this is the dev env, then startup a mock blockchain
-  ./scripts/devchain
-
-  # migrate contracts to the appropriate network
-  truffle migrate --network ${CRUCIBLE_ENV}
+    ret=$?
+    if [ ${ret} -ne 0 ]; then
+        echo "Error trying to deploy ${CRUCIBLE_ENV}"
+        exit ${ret}
+    fi
 else
   # if this is the staging env, then unseal the vault
   ./scripts/vault_unseal.js
@@ -35,9 +37,46 @@ else
   # this will push and update our contracts in staging or prod
   if [ "${OLD_VERSION}" != "${NEW_VERSION}" ]; then
     echo "version changed, updating contracts on chain..."
-    zos push --network ${CRUCIBLE_ENV}
-    zos update Foundry --network ${CRUCIBLE_ENV}
-    # TODO(godsflaw): commit updates to zos.ENVIRONMENT.json
+    zos push --network ${CRUCIBLE_ENV} && \
+      zos update Foundry --network ${CRUCIBLE_ENV}
+
+    ret=$?
+    if [ ${ret} -ne 0 ]; then
+        echo "Error trying to deploy ${CRUCIBLE_ENV}"
+        exit ${ret}
+    fi
+  fi
+
+  MODIFIED=`git status ./zos.${CRUCIBLE_ENV}.json | grep modified|wc -l`
+  if [ ${MODIFIED} -gt 0 ]; then
+    mkdir -p ~/.ssh && \
+      chmod 700 ~/.ssh && \
+      cp -p ./github/known_hosts ~/.ssh/known_hosts && \
+      ./scripts/vault_get_deploy_key.js > ~/.ssh/id_rsa && \
+      chmod 600 ~/.ssh/id_rsa && \
+      git config --global user.name "Crucible Deploy" && \
+      git config --global user.email chris@dod.net && \
+      git add ./zos.${CRUCIBLE_ENV}.json && \
+      git commit -m"${CRUCIBLE_ENV}-${NEW_VERSION}: migration changes" && \
+      git push origin dev
+
+      ret=$?
+      if [ ${ret} -ne 0 ]; then
+          echo "Error trying to commit ./zos.${CRUCIBLE_ENV}.json to dev"
+          exit ${ret}
+      fi
+
+    if [ "${CRUCIBLE_ENV}" == "production" ]; then
+      git push origin dev:master
+
+      ret=$?
+      if [ ${ret} -ne 0 ]; then
+          echo "Error trying to commit ./zos.${CRUCIBLE_ENV}.json to master"
+          exit ${ret}
+      fi
+    fi
+
+    rm ~/.ssh/id_rsa
   fi
 fi
 

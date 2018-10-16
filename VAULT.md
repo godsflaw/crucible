@@ -101,12 +101,18 @@ vi env-staging
 ```
 
 ## once in the shell you must initialize vault and seal it (terminal #3)
+
 Use the mnemonic words we generated and saved earlier to be stored in the vault.
+You also need to make a file named `key` and put the ssh deploy key for the
+crucible repo in it.
 You must run `vault auth` and provide the root token.
 
 ```
+vi ./key
 vault auth
 vault write secret/network/staging/seed key="<MNEMONIC WORDS>"
+cat ./key | vault write secret/network/staging/deploykey key=-
+rm ./key
 vault seal
 ```
 The last command sealed the vault.  Next we will attempt to unseal it again.
@@ -122,6 +128,7 @@ expected.
 ```
 ./scripts/vault_unseal.js
 ./scripts/vault_get_mnemonic.js
+./scripts/vault_get_deploy_key.js
 ```
 
 In `terminal #1` you should see log messages.
@@ -149,8 +156,8 @@ location.
 
 ```
 docker ps
-docker commit <CONTAINER ID> r.cfcr.io/godsflaw/vault:sealed
-docker push r.cfcr.io/godsflaw/vault:sealed
+docker commit <CONTAINER ID> r.cfcr.io/godsflaw/vault:crucile-staging-sealed
+docker push r.cfcr.io/godsflaw/vault:crucile-staging-sealed
 ```
 
 ## As a bonus, you can now run integration tests from (terminal #2)
@@ -175,7 +182,7 @@ Under the `RunningIntegrationTests` section, you will notice this sub-section:
       version: '2'
       services:
         vault:
-          image: r.cfcr.io/godsflaw/vault:sealed
+          image: r.cfcr.io/godsflaw/vault:crucile-staging-sealed
 ```
 
 This defines the vault service.  When privileged mode was allowed on CodeFresh

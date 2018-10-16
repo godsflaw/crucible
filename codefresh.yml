@@ -48,7 +48,7 @@ steps:
       version: '2'
       services:
         vault:
-          image: r.cfcr.io/godsflaw/vault:sealed
+          image: r.cfcr.io/godsflaw/vault:crucible-staging-sealed
     composition_candidates:
       test_service:
         depends_on:
@@ -84,7 +84,7 @@ steps:
           ports:
             - 8545
         vault:
-          image: r.cfcr.io/godsflaw/vault:sealed
+          image: r.cfcr.io/godsflaw/vault:crucible-staging-sealed
     environment_name: 'staging'
 
   RunningProductionTests:
@@ -98,7 +98,7 @@ steps:
       version: '2'
       services:
         vault:
-          image: r.cfcr.io/godsflaw/vault:production-sealed
+          image: r.cfcr.io/godsflaw/vault:crucible-production-sealed
     composition_candidates:
       test_service:
         depends_on:
@@ -134,5 +134,5 @@ steps:
           ports:
             - 8545
         vault:
-          image: r.cfcr.io/godsflaw/vault:production-sealed
+          image: r.cfcr.io/godsflaw/vault:crucible-production-sealed
     environment_name: 'production'
