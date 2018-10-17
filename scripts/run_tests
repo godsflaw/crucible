@@ -51,7 +51,7 @@ else
   if [ ${MODIFIED} -gt 0 ]; then
     mkdir -p ~/.ssh && \
       chmod 700 ~/.ssh && \
-      cp -p ./github/known_hosts ~/.ssh/known_hosts && \
+      cp -p ./.github/known_hosts ~/.ssh/known_hosts && \
       ./scripts/vault_get_deploy_key.js > ~/.ssh/id_rsa && \
       chmod 600 ~/.ssh/id_rsa && \
       git config --global user.name "Crucible Deploy" && \
