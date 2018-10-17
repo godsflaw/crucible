@@ -73,11 +73,25 @@ Once the containers are running, you can deploy straight to an environment and
 run tests with (`bash`):
 ```
 # staging (remember staging vault)
+export CRUCIBLE_ENV=0
+export UNSEAL_KEY1=0
+export UNSEAL_KEY2=0
+export UNSEAL_KEY3=0
+export SEED_TOKEN=0
+export VAULT_ADDR=0
+export FOUNDRY_PROXY=0
 . ./env-staging
 export VAULT_ADDR=http://localhost:8200
 npm test
 
 # production (remember production vault)
+export CRUCIBLE_ENV=0
+export UNSEAL_KEY1=0
+export UNSEAL_KEY2=0
+export UNSEAL_KEY3=0
+export SEED_TOKEN=0
+export VAULT_ADDR=0
+export FOUNDRY_PROXY=0
 . ./env-production
 export VAULT_ADDR=http://localhost:8200
 npm test

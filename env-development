@@ -1,1 +1,1 @@
-export CRUCIBLE_ENV=development
+CRUCIBLE_ENV=development
