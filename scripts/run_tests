@@ -54,6 +54,7 @@ else
       cp -p ./.github/known_hosts ~/.ssh/known_hosts && \
       ./scripts/vault_get_deploy_key.js > ~/.ssh/id_rsa && \
       chmod 600 ~/.ssh/id_rsa && \
+      git remote set-url origin git@github.com:godsflaw/crucible.git && \
       git config --global user.name "Crucible Deploy" && \
       git config --global user.email chris@dod.net && \
       git add ./zos.${CRUCIBLE_ENV}.json && \
