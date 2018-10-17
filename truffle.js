@@ -43,10 +43,15 @@ if (environment !== 'development') {
   // engine filters
   engine.addProvider(new FilterSubprovider());
   engine.addProvider(new WalletSubprovider(wallet, {}));
-  engine.addProvider(new NonceSubprovider());
   engine.addProvider(
     new Web3Subprovider(new Web3.providers.HttpProvider(providerUrl))
   );
+
+  // try to fix nonce too low errors
+  var nonceSubprovider = new NonceSubprovider();
+  engine._providers.unshift(nonceSubprovider);
+  nonceSubprovider.setEngine(engine);
+
   engine.start();
 }
 
