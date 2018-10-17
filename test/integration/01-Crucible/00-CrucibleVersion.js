@@ -41,6 +41,6 @@ contract('Crucible - version', async (accounts) => {
     });
 
     var version = await crucible.version.call();
-    assert.equal(web3.toUtf8(version).trim(), '1.0.0', 'got correct version');
+    assert.equal(web3.toUtf8(version).trim(), '1.0.1', 'got correct version');
   });
 });
