@@ -156,8 +156,8 @@ location.
 
 ```
 docker ps
-docker commit <CONTAINER ID> r.cfcr.io/godsflaw/vault:crucile-staging-sealed
-docker push r.cfcr.io/godsflaw/vault:crucile-staging-sealed
+docker commit <CONTAINER ID> r.cfcr.io/godsflaw/vault:crucible-staging-sealed
+docker push r.cfcr.io/godsflaw/vault:crucible-staging-sealed
 ```
 
 ## As a bonus, you can now run integration tests from (terminal #2)
@@ -182,7 +182,7 @@ Under the `RunningIntegrationTests` section, you will notice this sub-section:
       version: '2'
       services:
         vault:
-          image: r.cfcr.io/godsflaw/vault:crucile-staging-sealed
+          image: r.cfcr.io/godsflaw/vault:crucible-staging-sealed
 ```
 
 This defines the vault service.  When privileged mode was allowed on CodeFresh
