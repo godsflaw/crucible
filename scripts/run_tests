@@ -59,7 +59,7 @@ else
       git config --global user.email chris@dod.net && \
       git add ./zos.${CRUCIBLE_ENV}.json && \
       git commit -m"${CRUCIBLE_ENV}-${NEW_VERSION}: migration changes" && \
-      git push origin dev
+      git push -f origin dev
 
       ret=$?
       if [ ${ret} -ne 0 ]; then
@@ -68,7 +68,7 @@ else
       fi
 
     if [ "${CRUCIBLE_ENV}" == "production" ]; then
-      git push origin dev:master
+      git push -f origin master
 
       ret=$?
       if [ ${ret} -ne 0 ]; then
