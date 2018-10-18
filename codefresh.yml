@@ -13,7 +13,9 @@ steps:
     when:
       branch:
         ignore:
-          - dev
+          - master
+          - ropsten
+          - kovan
     image: '${{BuildingDockerImage}}'
     working_directory: IMAGE_WORK_DIR
     entry_point:
