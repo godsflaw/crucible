@@ -1,5 +1,5 @@
-![Crucible](crucible.png)
 [![Codefresh build status]( https://g.codefresh.io/api/badges/build?repoOwner=godsflaw&repoName=crucible&branch=dev&pipelineName=crucible&accountName=godsflaw&key=eyJhbGciOiJIUzI1NiJ9.NTljZGM0MWUyYzU0ZTcwMDAxY2Y5NTg1.2DX4cg1dpW9ZLu5kV-goA1vC-GatcnyaQB2Tkabd6ZQ&type=cf-1)]( https://g.codefresh.io/repositories/godsflaw/crucible/builds?filter=trigger:build;branch:dev;service:59cdc506f586af000152b93e~crucible)
+![Crucible](crucible.png)
 
 # crucible
 A crucible is a decentralized commitment contract designed to encourage
@@ -12,7 +12,7 @@ ethereum blockchain.  Included in this repo is:
 * the Crucible contract code
 * extensive tests for all the above
 
-# getting started (development)
+# Getting Started (development)
 
 This contract is very low level.  This repo contains everything one needs to
 make changes, test, and deploy those underlying contracts.  You can see how to
@@ -21,84 +21,78 @@ this contract directly, we recommend using one of the following client
 libraries:
 * [crucible.js](https://github.com/godsflaw/crucible.js)
 
-## OSX
+## development environment
 ```
-brew install ethereum
-```
-
-## everyone
-```
-npm install -g truffle
-npm install -g ethereumjs-testrpc
+npm install -g truffle@4.1.14
+npm install -g ganache-cli
+npm install -g zos
 git clone git@github.com:godsflaw/crucible.git
 cd crucible
 npm install
-truffle compile
-truffle migrate
 ```
 
-## to run tests and bring up the testrpc blockchain
+## to compile, deploy, and test contracts
 ```
-npm test
+npm run deploy && npm test
 ```
 
 ## spin up in docker container
 ```
-docker build -t godsflaw/crucible:dev .
-docker run godsflaw/crucible:dev
+docker build -t godsflaw/crucible:<BRANCH> .
+docker run -p 8545:8545 godsflaw/crucible:<BRANCH>
 ```
 
 ## version bump before PR is merged to dev
-
 You need to update the version in package.json, then run the following:
 ```
 ./scripts/version_bump
 ```
 
-Make sure you verify the diff and push this to your PR
+Make sure you verify the diff, commit, and push all changes to your PR.
 
 ## hopping between environments easily
 
-If you have the vault containers built with the instructions from `VAULT.md`,
-then you can spin them up locally with:
+If you have the vault containers built with the instructions from `VAULT.md`
+then you can deploy and test code on any testnet/staging/production right
+from your development environment.  The staging and production vault containers
+are only available to those with privledged access to the wallet keys.
+
+`npm run deploy` will automatically spin them up.
+
+Once you have the production and development vault containers, you can simply
+run `npm run deploy` and `npm test` with the correct environment.
+
+NOTE: only works in (`bash`):
 ```
 # staging
-docker run -p8200:8200 r.cfcr.io/godsflaw/vault:crucible-staging-sealed
-
-# production
-docker run -p8200:8200 r.cfcr.io/godsflaw/vault:crucible-production-sealed
-```
-
-Once the containers are running, you can deploy straight to an environment and
-run tests with (`bash`):
-```
-# staging (remember staging vault)
-export CRUCIBLE_ENV=0
-export UNSEAL_KEY1=0
-export UNSEAL_KEY2=0
-export UNSEAL_KEY3=0
-export SEED_TOKEN=0
-export VAULT_ADDR=0
-export FOUNDRY_PROXY=0
+./scripts/plumb-env
 . ./env-staging
 export VAULT_ADDR=http://localhost:8200
-npm test
+npm run deploy && npm test
 
-# production (remember production vault)
-export CRUCIBLE_ENV=0
-export UNSEAL_KEY1=0
-export UNSEAL_KEY2=0
-export UNSEAL_KEY3=0
-export SEED_TOKEN=0
-export VAULT_ADDR=0
-export FOUNDRY_PROXY=0
+# kovan
+./scripts/plumb-env
+. ./env-kovan
+export VAULT_ADDR=http://localhost:8200
+npm run deploy && npm test
+
+# ropsten
+./scripts/plumb-env
+. ./env-ropsten
+export VAULT_ADDR=http://localhost:8200
+npm run deploy && npm test
+
+# production (you might need to kill the staging vault)
+./scripts/plumb-env
 . ./env-production
 export VAULT_ADDR=http://localhost:8200
-npm test
+npm run deploy && npm test
+
 ```
 
 Flipping back to the `development` environment is easy with:
 ```
+./scripts/plumb-env
 . ./env-development
 ```
 

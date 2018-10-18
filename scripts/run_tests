@@ -4,98 +4,6 @@
 
 CRUCIBLE_ENV="${CRUCIBLE_ENV:-development}"
 
-#
-# deploy
-#
-if [ "${CRUCIBLE_ENV}" == "development" ]; then
-  # compile the solidity code
-  truffle compile --network ${CRUCIBLE_ENV} && \
-    ./scripts/devchain && \
-    truffle migrate --network ${CRUCIBLE_ENV}
-
-    ret=$?
-    if [ ${ret} -ne 0 ]; then
-        echo "Error trying to deploy ${CRUCIBLE_ENV}"
-        exit ${ret}
-    fi
-else
-  # if this is the staging env, then unseal the vault
-  ./scripts/vault_unseal.js
-
-  # Use the following command to create the contract for the first time.
-  # Make sure you run ./env-staging or ./env-production first.  You should
-  # then set FOUNDRY_PROXY to the address from 'zos create'.
-  # zos add Foundry
-  # zos push --network staging
-  # zos create Foundry --init initialize \
-  #   --args "0x7af77b0d604D13a41e6d0f2175D8a61d5f1115C9" --network staging
-  #
-
-  OLD_VERSION=`egrep '^  "version":' ./zos.${CRUCIBLE_ENV}.json | awk -F' ' '{ print $2 }' | sed -E 's/",?//g'`
-  NEW_VERSION=`egrep '^  "version":' ./zos.json | awk -F' ' '{ print $2 }' | sed -E 's/",?//g'`
-
-  # this will push and update our contracts in staging or prod
-  if [ "${OLD_VERSION}" != "${NEW_VERSION}" ]; then
-    echo "version changed, updating contracts on chain..."
-    mkdir -p ~/.ssh && \
-      chmod 700 ~/.ssh && \
-      cp -p ./.github/known_hosts ~/.ssh/known_hosts && \
-      ./scripts/vault_get_deploy_key.js > ~/.ssh/id_rsa && \
-      chmod 600 ~/.ssh/id_rsa && \
-      git remote set-url origin git@github.com:godsflaw/crucible.git && \
-      git config --global user.name "Crucible Deploy" && \
-      git config --global user.email chris@dod.net && \
-      git remote update && \
-      git checkout dev && \
-      git reset --hard origin/dev && \
-      zos push --network ${CRUCIBLE_ENV} && \
-      sleep 120 && \
-      zos update Foundry --network ${CRUCIBLE_ENV}
-
-    ret=$?
-    if [ ${ret} -ne 0 ]; then
-        echo "Error trying to deploy ${CRUCIBLE_ENV}"
-        exit ${ret}
-    fi
-  fi
-
-  MODIFIED=`git status ./zos.${CRUCIBLE_ENV}.json | grep modified|wc -l`
-  if [ ${MODIFIED} -gt 0 ]; then
-    git add ./zos.${CRUCIBLE_ENV}.json && \
-      git commit -m"${CRUCIBLE_ENV}-${NEW_VERSION}: migration changes"
-
-      ret=$?
-      if [ ${ret} -ne 0 ]; then
-          echo "Error trying to commit ./zos.${CRUCIBLE_ENV}.json to dev"
-          exit ${ret}
-      fi
-
-    if [ "${CRUCIBLE_ENV}" == "production" ]; then
-      git push origin master && \
-        git push origin dev
-
-      ret=$?
-      if [ ${ret} -ne 0 ]; then
-          echo "Error trying to commit ./zos.${CRUCIBLE_ENV}.json"
-          exit ${ret}
-      fi
-    else
-      git push origin dev
-
-      ret=$?
-      if [ ${ret} -ne 0 ]; then
-          echo "Error trying to commit ./zos.${CRUCIBLE_ENV}.json to dev"
-          exit ${ret}
-      fi
-    fi
-
-    rm ~/.ssh/id_rsa
-  fi
-fi
-
-#
-# run tests
-#
 if [ "${CRUCIBLE_ENV}" == "development" ]; then
   if [ "$#" -eq 0 ]; then
     CRUCIBLE_ARGS="./test/unit/*/*.js"
@@ -105,7 +13,9 @@ if [ "${CRUCIBLE_ENV}" == "development" ]; then
 
   truffle test --network ${CRUCIBLE_ENV} ${CRUCIBLE_ARGS} && \
     pkill -f ganache-cli
-elif [ "${CRUCIBLE_ENV}" == "staging" ]; then
+elif [ "${CRUCIBLE_ENV}" == "staging" ] || \
+     [ "${CRUCIBLE_ENV}" == "ropsten" ] || \
+     [ "${CRUCIBLE_ENV}" == "kovan" ]; then
   if [ "$#" -eq 0 ]; then
     CRUCIBLE_ARGS="./test/integration/*/*.js"
   else
@@ -122,4 +32,3 @@ elif [ "${CRUCIBLE_ENV}" == "production" ]; then
 
   truffle test --network ${CRUCIBLE_ENV} ${CRUCIBLE_ARGS}
 fi
-
