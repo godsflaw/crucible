@@ -60,6 +60,7 @@ else
       git add ./zos.${CRUCIBLE_ENV}.json && \
       git commit -m"${CRUCIBLE_ENV}-${NEW_VERSION}: migration changes" && \
       git remote update
+      git reset --hard HEAD
       git rebase origin/dev
 
       ret=$?

@@ -13,7 +13,7 @@ steps:
     when:
       branch:
         ignore:
-          - master
+          - dev
     image: '${{BuildingDockerImage}}'
     working_directory: IMAGE_WORK_DIR
     entry_point:
