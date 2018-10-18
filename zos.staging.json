@@ -1,29 +1,29 @@
 {
   "contracts": {
     "Foundry": {
-      "address": "0xb9b5ceabe90bac19c52d4abe4fea1ce53ef078ff",
+      "address": "0x82934af6f355bbf7212a5ddd63769402a2412e3b",
       "constructorCode": "608060405233600160006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff1602179055506154fb806100546000396000f300",
-      "bodyBytecodeHash": "307e89cebbee95918a435078980523b7c02df04c4acec2cc8ef5cc532af0a713",
-      "bytecodeHash": "e760bdea93da9aa14466468d9fd0a1e5631e73b2e8830013a0a82fbc34737225"
+      "bodyBytecodeHash": "47f2ed02048bad716cfbbf7491a3f22f9454881e94fad8945ada3fd53de782e0",
+      "bytecodeHash": "6f0a57033787d221c7456268e1e43b71e9e258017de049ec6fede520cd3883e7"
     }
   },
   "proxies": {
     "Foundry": [
       {
         "address": "0x0108bfd0929be71ea1a836f829a2d95290bef88f",
-        "version": "1.0.11",
-        "implementation": "0xb9b5ceabe90bac19c52d4abe4fea1ce53ef078ff"
+        "version": "1.0.12",
+        "implementation": "0x82934af6f355bbf7212a5ddd63769402a2412e3b"
       }
     ]
   },
   "app": {
     "address": "0xa8606ebabd64d3f0de8deb60fef18bfedfa581df"
   },
-  "version": "1.0.11",
+  "version": "1.0.12",
   "package": {
     "address": "0x510adcf7e2c88dd69983c1d4859e927aee9c720f"
   },
   "provider": {
-    "address": "0x0da9cdec57b5d5dafda0cf5761e9e96a5a4e6e94"
+    "address": "0xa6d8d6132e554cc81bfd989197e865a225118214"
   }
 }
