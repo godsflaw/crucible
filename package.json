@@ -1,6 +1,6 @@
 {
   "name": "crucible",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "a decentralized commitment contract",
   "main": "truffle.js",
   "repository": {
