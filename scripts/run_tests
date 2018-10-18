@@ -49,6 +49,7 @@ else
       git checkout dev && \
       git reset --hard origin/dev && \
       zos push --network ${CRUCIBLE_ENV} && \
+      sleep 120 && \
       zos update Foundry --network ${CRUCIBLE_ENV}
 
     ret=$?
