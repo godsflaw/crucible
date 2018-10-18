@@ -59,7 +59,8 @@ else
       git config --global user.email chris@dod.net && \
       git add ./zos.${CRUCIBLE_ENV}.json && \
       git commit -m"${CRUCIBLE_ENV}-${NEW_VERSION}: migration changes" && \
-      git push -f origin dev
+      git remote update
+      git rebase origin/dev
 
       ret=$?
       if [ ${ret} -ne 0 ]; then
@@ -68,11 +69,20 @@ else
       fi
 
     if [ "${CRUCIBLE_ENV}" == "production" ]; then
-      git push -f origin master
+      git push origin master && \
+        git push origin dev
 
       ret=$?
       if [ ${ret} -ne 0 ]; then
-          echo "Error trying to commit ./zos.${CRUCIBLE_ENV}.json to master"
+          echo "Error trying to commit ./zos.${CRUCIBLE_ENV}.json"
+          exit ${ret}
+      fi
+    else
+      git push origin dev
+
+      ret=$?
+      if [ ${ret} -ne 0 ]; then
+          echo "Error trying to commit ./zos.${CRUCIBLE_ENV}.json to dev"
           exit ${ret}
       fi
     fi
