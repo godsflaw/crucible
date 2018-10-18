@@ -37,7 +37,18 @@ else
   # this will push and update our contracts in staging or prod
   if [ "${OLD_VERSION}" != "${NEW_VERSION}" ]; then
     echo "version changed, updating contracts on chain..."
-    zos push --network ${CRUCIBLE_ENV} && \
+    mkdir -p ~/.ssh && \
+      chmod 700 ~/.ssh && \
+      cp -p ./.github/known_hosts ~/.ssh/known_hosts && \
+      ./scripts/vault_get_deploy_key.js > ~/.ssh/id_rsa && \
+      chmod 600 ~/.ssh/id_rsa && \
+      git remote set-url origin git@github.com:godsflaw/crucible.git && \
+      git config --global user.name "Crucible Deploy" && \
+      git config --global user.email chris@dod.net && \
+      git remote update && \
+      git checkout dev && \
+      git reset --hard origin/dev && \
+      zos push --network ${CRUCIBLE_ENV} && \
       zos update Foundry --network ${CRUCIBLE_ENV}
 
     ret=$?
@@ -49,19 +60,8 @@ else
 
   MODIFIED=`git status ./zos.${CRUCIBLE_ENV}.json | grep modified|wc -l`
   if [ ${MODIFIED} -gt 0 ]; then
-    mkdir -p ~/.ssh && \
-      chmod 700 ~/.ssh && \
-      cp -p ./.github/known_hosts ~/.ssh/known_hosts && \
-      ./scripts/vault_get_deploy_key.js > ~/.ssh/id_rsa && \
-      chmod 600 ~/.ssh/id_rsa && \
-      git remote set-url origin git@github.com:godsflaw/crucible.git && \
-      git config --global user.name "Crucible Deploy" && \
-      git config --global user.email chris@dod.net && \
-      git add ./zos.${CRUCIBLE_ENV}.json && \
-      git commit -m"${CRUCIBLE_ENV}-${NEW_VERSION}: migration changes" && \
-      git remote update
-      git reset --hard HEAD
-      git rebase origin/dev
+    git add ./zos.${CRUCIBLE_ENV}.json && \
+      git commit -m"${CRUCIBLE_ENV}-${NEW_VERSION}: migration changes"
 
       ret=$?
       if [ ${ret} -ne 0 ]; then
