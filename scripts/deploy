@@ -73,6 +73,7 @@ if [ "${OLD_VERSION}" != "${NEW_VERSION}" ]; then
       git config --global user.name "Crucible Deploy" && \
       git config --global user.email chris@dod.net && \
       git remote update && \
+      git reset --hard HEAD && \
       git checkout dev && \
       git reset --hard origin/dev && \
       zos push --network ${CRUCIBLE_ENV} && \

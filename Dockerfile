@@ -25,6 +25,8 @@ ADD truffle.js ${CRICIBLE}
 ADD zos.json ${CRICIBLE}
 ADD zos.staging.json ${CRICIBLE}
 ADD zos.production.json ${CRICIBLE}
+ADD zos.ropsten.json ${CRICIBLE}
+ADD zos.kovan.json ${CRICIBLE}
 ADD docker ${CRICIBLE}
 
 # install codebase
