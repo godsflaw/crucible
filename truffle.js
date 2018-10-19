@@ -18,6 +18,10 @@ if (environment === 'production') {
   providerUrl = 'https://mainnet.infura.io/';
 } else if (environment === 'staging') {
   providerUrl = 'https://rinkeby.infura.io/';
+} else if (environment === 'ropsten') {
+  providerUrl = 'https://ropsten.infura.io/';
+} else if (environment === 'kovan') {
+  providerUrl = 'https://kovan.infura.io/';
 } else {
   providerUrl = 'https://rinkeby.infura.io/';
 }
@@ -73,7 +77,19 @@ module.exports = {
       from: address,
       gasPrice: web3.toWei('10', 'gwei'),
       network_id: "1",  // Main Ethereum Network
-    }
+    },
+    ropsten: {
+      provider: engine,
+      from: address,
+      gasPrice: web3.toWei('10', 'gwei'),
+      network_id: '3',  // Official ropsten network id
+    },
+    kovan: {
+      provider: engine,
+      from: address,
+      gasPrice: web3.toWei('10', 'gwei'),
+      network_id: '42',  // Official kovan network id
+    },
   },
   rpc: {
     // Use the default host and port

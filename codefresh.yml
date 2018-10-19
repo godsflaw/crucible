@@ -24,7 +24,7 @@ steps:
     create_file:
       path: /codefresh/volume/cf-generated
       name: unit_test_script
-      content: npm test
+      content: npm run deploy && npm test
     on_success:
       metadata:
         set:
@@ -61,7 +61,7 @@ steps:
           - vault
         image: '${{BuildingDockerImage}}'
         env_file: ./env-staging
-        command: sh -c 'npm test'
+        command: sh -c 'npm run deploy && npm test'
     on_success:
       metadata:
         set:
@@ -93,6 +93,66 @@ steps:
           image: r.cfcr.io/godsflaw/vault:crucible-staging-sealed
     environment_name: 'staging'
 
+  RunningRopstenTests:
+    type: composition
+    title: Running Ropsten Tests
+    when:
+      branch:
+        only:
+          - ropsten
+    composition:
+      version: '2'
+      services:
+        vault:
+          image: r.cfcr.io/godsflaw/vault:crucible-staging-sealed
+    composition_candidates:
+      test_service:
+        depends_on:
+          - vault
+        image: '${{BuildingDockerImage}}'
+        env_file: ./env-ropsten
+        command: sh -c 'npm run deploy && npm test'
+    on_success:
+      metadata:
+        set:
+          - '${{BuildingDockerImage.imageId}}':
+            - CF_QUALITY: true
+    on_fail:
+      metadata:
+        set:
+          - '${{BuildingDockerImage.imageId}}':
+            - CF_QUALITY: false
+
+  RunningKovanTests:
+    type: composition
+    title: Running Kovan Tests
+    when:
+      branch:
+        only:
+          - kovan
+    composition:
+      version: '2'
+      services:
+        vault:
+          image: r.cfcr.io/godsflaw/vault:crucible-staging-sealed
+    composition_candidates:
+      test_service:
+        depends_on:
+          - vault
+        image: '${{BuildingDockerImage}}'
+        env_file: ./env-kovan
+        command: sh -c 'npm run deploy && npm test'
+    on_success:
+      metadata:
+        set:
+          - '${{BuildingDockerImage.imageId}}':
+            - CF_QUALITY: true
+    on_fail:
+      metadata:
+        set:
+          - '${{BuildingDockerImage.imageId}}':
+            - CF_QUALITY: false
+
   RunningProductionTests:
     type: composition
     title: Running Production Tests
@@ -111,7 +171,7 @@ steps:
           - vault
         image: '${{BuildingDockerImage}}'
         env_file: ./env-production
-        command: sh -c 'npm test'
+        command: sh -c 'npm run deploy && npm test'
     on_success:
       metadata:
         set:

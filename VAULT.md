@@ -95,8 +95,10 @@ UNSEAL_KEY3) and the root token (as SEED_TOKEN) from `vault init` to the
 `./env-staging` script.  Run that and unseal the vault.
 
 ```
+./scripts/plumb-env
 vi env-staging
-./env-staging
+. ./env-staging
+export VAULT_ADDR=http://localhost:8200
 ./scripts/vault_unseal.js
 ```
 
@@ -162,7 +164,7 @@ docker push r.cfcr.io/godsflaw/vault:crucible-staging-sealed
 
 ## As a bonus, you can now run integration tests from (terminal #2)
 
-To develop integration tests, you need only run `npm test` from your terminal
+To develop integration tests, you need only run `npm run deploy && npm test` from your terminal
 that has all the settings as though it is the staging environment.
 
 ```
@@ -199,7 +201,7 @@ for all but `CRUCIBLE_ENV`.
           - vault
         image: '${{BuildingDockerImage}}'
         env_file: ./env-staging
-        command: sh -c 'npm test'
+        command: sh -c 'npm run deploy && npm test'
 ```
 
 # Troubleshooting

@@ -25,12 +25,13 @@ ADD truffle.js ${CRICIBLE}
 ADD zos.json ${CRICIBLE}
 ADD zos.staging.json ${CRICIBLE}
 ADD zos.production.json ${CRICIBLE}
+ADD docker ${CRICIBLE}
 
 # install codebase
-RUN (cd ${CRICIBLE} ; npm install)
+RUN (cd ${CRICIBLE} && echo 'true' > ./docker && npm install)
 
 # any ports we want to expose
-# EXPOSE 8545
+EXPOSE 8545
 
 # run the tests
 WORKDIR "${CRICIBLE}"

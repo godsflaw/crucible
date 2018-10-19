@@ -1,6 +1,6 @@
 {
   "name": "crucible",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "description": "a decentralized commitment contract",
   "main": "truffle.js",
   "repository": {
@@ -14,6 +14,7 @@
     "development": "./scripts/noop",
     "staging": "./scripts/noop",
     "production": "./scripts/noop",
+    "deploy": "./scripts/deploy",
     "test": "./scripts/run_tests"
   },
   "author": "Christopher Mooney <chris@dod.net>",
