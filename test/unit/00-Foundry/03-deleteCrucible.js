@@ -40,7 +40,7 @@ contract('Foundry - deleteCrucible', async (accounts) => {
       cu.feeNumerator,
     );
 
-    truffleAssert.eventEmitted(tx, 'CrucibleCreated', (ev) => {
+    truffleAssert.eventEmitted(tx, 'CrucibleCreated', async (ev) => {
       crucible1 = Crucible.at(ev.contractAddress);
     });
 
@@ -78,7 +78,7 @@ contract('Foundry - deleteCrucible', async (accounts) => {
       cu.feeNumerator,
     );
 
-    truffleAssert.eventEmitted(tx, 'CrucibleCreated', (ev) => {
+    truffleAssert.eventEmitted(tx, 'CrucibleCreated', async (ev) => {
       crucible1 = Crucible.at(ev.contractAddress);
     });
 
@@ -93,7 +93,7 @@ contract('Foundry - deleteCrucible', async (accounts) => {
       cu.feeNumerator,
     );
 
-    truffleAssert.eventEmitted(tx, 'CrucibleCreated', (ev) => {
+    truffleAssert.eventEmitted(tx, 'CrucibleCreated', async (ev) => {
       crucible2 = Crucible.at(ev.contractAddress);
     });
 
@@ -111,7 +111,7 @@ contract('Foundry - deleteCrucible', async (accounts) => {
       cu.feeNumerator,
     );
 
-    truffleAssert.eventEmitted(tx, 'CrucibleCreated', (ev) => {
+    truffleAssert.eventEmitted(tx, 'CrucibleCreated', async (ev) => {
       crucible3 = Crucible.at(ev.contractAddress);
     });
 
@@ -179,7 +179,7 @@ contract('Foundry - deleteCrucible', async (accounts) => {
       cu.feeNumerator,
     );
 
-    truffleAssert.eventEmitted(tx, 'CrucibleCreated', (ev) => {
+    truffleAssert.eventEmitted(tx, 'CrucibleCreated', async (ev) => {
       crucible1 = Crucible.at(ev.contractAddress);
     });
 
@@ -194,7 +194,7 @@ contract('Foundry - deleteCrucible', async (accounts) => {
       cu.feeNumerator,
     );
 
-    truffleAssert.eventEmitted(tx, 'CrucibleCreated', (ev) => {
+    truffleAssert.eventEmitted(tx, 'CrucibleCreated', async (ev) => {
       crucible2 = Crucible.at(ev.contractAddress);
     });
 
@@ -212,7 +212,7 @@ contract('Foundry - deleteCrucible', async (accounts) => {
       cu.feeNumerator,
     );
 
-    truffleAssert.eventEmitted(tx, 'CrucibleCreated', (ev) => {
+    truffleAssert.eventEmitted(tx, 'CrucibleCreated', async (ev) => {
       crucible3 = Crucible.at(ev.contractAddress);
     });
 
@@ -253,7 +253,7 @@ contract('Foundry - deleteCrucible', async (accounts) => {
       cu.feeNumerator,
     );
 
-    truffleAssert.eventEmitted(tx, 'CrucibleCreated', (ev) => {
+    truffleAssert.eventEmitted(tx, 'CrucibleCreated', async (ev) => {
       crucible1 = Crucible.at(ev.contractAddress);
     });
 
@@ -268,7 +268,7 @@ contract('Foundry - deleteCrucible', async (accounts) => {
       cu.feeNumerator,
     );
 
-    truffleAssert.eventEmitted(tx, 'CrucibleCreated', (ev) => {
+    truffleAssert.eventEmitted(tx, 'CrucibleCreated', async (ev) => {
       crucible2 = Crucible.at(ev.contractAddress);
     });
 
@@ -286,7 +286,7 @@ contract('Foundry - deleteCrucible', async (accounts) => {
       cu.feeNumerator,
     );
 
-    truffleAssert.eventEmitted(tx, 'CrucibleCreated', (ev) => {
+    truffleAssert.eventEmitted(tx, 'CrucibleCreated', async (ev) => {
       crucible3 = Crucible.at(ev.contractAddress);
     });
 
@@ -322,7 +322,7 @@ contract('Foundry - deleteCrucible', async (accounts) => {
       cu.feeNumerator,
     );
 
-    truffleAssert.eventEmitted(tx, 'CrucibleCreated', (ev) => {
+    truffleAssert.eventEmitted(tx, 'CrucibleCreated', async (ev) => {
       crucible1 = Crucible.at(ev.contractAddress);
     });
 
@@ -337,7 +337,7 @@ contract('Foundry - deleteCrucible', async (accounts) => {
       cu.feeNumerator,
     );
 
-    truffleAssert.eventEmitted(tx, 'CrucibleCreated', (ev) => {
+    truffleAssert.eventEmitted(tx, 'CrucibleCreated', async (ev) => {
       crucible2 = Crucible.at(ev.contractAddress);
     });
 
@@ -355,7 +355,7 @@ contract('Foundry - deleteCrucible', async (accounts) => {
       cu.feeNumerator,
     );
 
-    truffleAssert.eventEmitted(tx, 'CrucibleCreated', (ev) => {
+    truffleAssert.eventEmitted(tx, 'CrucibleCreated', async (ev) => {
       crucible3 = Crucible.at(ev.contractAddress);
     });
 
