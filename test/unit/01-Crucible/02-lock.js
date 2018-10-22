@@ -19,7 +19,7 @@ contract('Crucible - lock', async (accounts) => {
       address.oracle,
       address.empty,
       cu.startDate(),
-      cu.lockDate(2),
+      cu.lockDate(3),
       cu.endDate(10),
       cu.minAmountWei,
       cu.timeout,
@@ -38,14 +38,14 @@ contract('Crucible - lock', async (accounts) => {
   it('lock changes crucible state to LOCKED', async () => {
     var state = await crucible.state.call();
     assert(cu.crucibleStateIsOpen(state), 'crucible is in the OPEN state');
-    await cu.sleep(2000);
+    await cu.sleep(3000);
     var tx = await crucible.lock.sendTransaction({ 'from': address.oracle });
     state = await crucible.state.call();
     assert(cu.crucibleStateIsLocked(state), 'crucible is in the LOCKED state');
   });
 
   it('lock emits state change event', async () => {
-    await cu.sleep(2000);
+    await cu.sleep(3000);
     var tx = await crucible.lock({ 'from': address.oracle });
     truffleAssert.eventEmitted(tx, 'CrucibleStateChange', (ev) => {
       return cu.crucibleStateIsOpen(ev.fromState) &&
@@ -56,7 +56,7 @@ contract('Crucible - lock', async (accounts) => {
   it('anyone can change crucible state to LOCKED', async () => {
     var state = await crucible.state.call();
     assert(cu.crucibleStateIsOpen(state), 'crucible is in the OPEN state');
-    await cu.sleep(2000);
+    await cu.sleep(3000);
     var tx = await crucible.lock.sendTransaction({ 'from': address.owner });
     state = await crucible.state.call();
     assert(cu.crucibleStateIsLocked(state), 'crucible is in the LOCKED state');
@@ -114,7 +114,7 @@ contract('Crucible - lock', async (accounts) => {
       'trackingBalance out-of-sync with balance'
     );
 
-    await cu.sleep(2000);
+    await cu.sleep(3000);
 
     // this should call _rebalance()
     tx = await crucible.lock.sendTransaction({ 'from': address.oracle });
@@ -145,7 +145,7 @@ contract('Crucible - lock', async (accounts) => {
   it('lock only changes state if we are in the OPEN state', async () => {
     var state = await crucible.state.call();
     assert(cu.crucibleStateIsOpen(state), 'crucible is in the OPEN state');
-    await cu.sleep(2000);
+    await cu.sleep(3000);
     var tx = await crucible.lock.sendTransaction({ 'from': address.oracle });
     state = await crucible.state.call();
     assert(cu.crucibleStateIsLocked(state), 'crucible is in the LOCKED state');
