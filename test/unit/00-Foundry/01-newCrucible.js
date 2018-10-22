@@ -34,7 +34,7 @@ contract('Foundry - newCrucible', async (accounts) => {
       { 'from': address.owner }
     );
 
-    truffleAssert.eventEmitted(tx, 'CrucibleCreated', async (ev) => {
+    truffleAssert.eventEmitted(tx, 'CrucibleCreated', (ev) => {
       crucible = Crucible.at(ev.contractAddress);
     });
 
