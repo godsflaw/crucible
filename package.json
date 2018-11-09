@@ -2,7 +2,11 @@
   "name": "crucible",
   "version": "1.0.14",
   "description": "a decentralized commitment contract",
-  "main": "truffle.js",
+  "main": "index.js",
+  "files": [
+    "build",
+    "index.js"
+  ],
   "repository": {
     "type": "git",
     "url": "git@github.com:godsflaw/crucible.git"
