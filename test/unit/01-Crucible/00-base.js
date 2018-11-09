@@ -3,7 +3,6 @@ const Address = require('../../fixtures/address');
 const { expectThrow } = require('../../fixtures/expectThrow');
 const { EVMRevert } = require('../../fixtures/EVMRevert');
 const truffleAssert = require('truffle-assertions');
-const abi = require('ethereumjs-abi')
 
 const Crucible = artifacts.require("./Crucible.sol");
 
