@@ -1,5 +1,5 @@
 {
-  "name": "crucible",
+  "name": "@godsflaw/crucible",
   "version": "1.0.14",
   "description": "a decentralized commitment contract",
   "main": "index.js",
