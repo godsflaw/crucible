@@ -18,6 +18,10 @@ ADD package-lock.json ${CRICIBLE}
 ADD package.json ${CRICIBLE}
 ADD truffle.js ${CRICIBLE}
 ADD index.js ${CRICIBLE}
+ADD env-staging ${CRICIBLE}
+ADD env-ropsten ${CRICIBLE}
+ADD env-kovan ${CRICIBLE}
+ADD env-production ${CRICIBLE}
 ADD zos.json ${CRICIBLE}
 ADD zos.staging.json ${CRICIBLE}
 ADD zos.production.json ${CRICIBLE}
