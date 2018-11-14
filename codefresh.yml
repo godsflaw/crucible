@@ -73,26 +73,6 @@ steps:
           - '${{BuildingDockerImage.imageId}}':
             - CF_QUALITY: false
 
-  LaunchingStaging:
-    type: launch-composition
-    when:
-      branch:
-        only:
-          - dev
-    composition:
-      version: '2'
-      services:
-        crucible:
-          depends_on:
-            - vault
-          image: '${{BuildingDockerImage}}'
-          env_file: ./env-staging
-          ports:
-            - 8545
-        vault:
-          image: r.cfcr.io/godsflaw/vault:crucible-staging-sealed
-    environment_name: 'staging'
-
   RunningRopstenTests:
     type: composition
     title: Running Ropsten Tests
