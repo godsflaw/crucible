@@ -56,3 +56,9 @@ typings/
 
 # dotenv environment variables file
 .env
+
+# we don't need to commit snapshots
+snapshots/
+
+# created when we snapshot
+zos.development.json
